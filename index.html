@@ -614,6 +614,13 @@ SETUP:
   /* ── RESCORE BUTTON ── */
   .rescore-btn{padding:5px 11px;background:#F3E5F5;color:#7B1FA2;border:1.5px solid #CE93D8;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
   .rescore-btn:hover{background:#CE93D8;color:white}
+  /* ── UNIFIED REFRESH BUTTON ── */
+  .rf-btn{padding:4px 10px;background:white;color:#546E7A;border:1.5px solid #CFD8DC;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s;display:inline-flex;align-items:center;gap:4px;line-height:1.4}
+  .rf-btn:hover{background:#E3F2FD;border-color:#90CAF9;color:#1565C0}
+  .rf-btn:active{transform:scale(.95)}
+  .rf-btn-sm{padding:3px 7px;font-size:10px}
+  .rf-btn-home{padding:5px 13px;font-size:12px;background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4);color:white}
+  .rf-btn-home:hover{background:rgba(255,255,255,.32);border-color:rgba(255,255,255,.7);color:white}
   /* ── LETTER GUIDE BAR ── */
   .letter-guide-bar{margin-top:12px;background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .letter-guide-btn{padding:5px 14px;background:#2E7D32;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -1327,7 +1334,10 @@ SETUP:
         <h2 id="home-greet-text">👋 早上好，Rey</h2>
         <p id="home-greet-sub">今天是 2026-05-24 · 准备好开始工作了吗？</p>
       </div>
-      <div class="home-greeting-right" id="home-clock">--:--:--</div>
+      <div class="home-greeting-right" style="display:flex;align-items:center;gap:10px">
+        <span id="home-clock">--:--:--</span>
+        <button class="rf-btn rf-btn-home" id="rf-home" onclick="panelRefresh('home',this)" title="重新加载首页所有数据">🔄 刷新</button>
+      </div>
     </div>
     <!-- Content rendered by renderHomePanel() -->
     <div id="home-content"></div>
@@ -1364,6 +1374,7 @@ SETUP:
       </select>
       <div class="filter-sep"></div>
       <button class="filter-btn batch-del-toggle" id="batch-del-toggle" onclick="toggleBatchMode()" title="进入批量删除模式，勾选多个客户一次性删除" style="border-color:var(--red);color:var(--red)">☑️ 批量删除</button>
+      <button class="rf-btn" id="rf-list" onclick="panelRefresh('list',this)" title="重新加载客户库数据">🔄 刷新客户库</button>
     </div>
     <!-- Batch delete action bar (visible in batch mode) -->
     <div id="batch-action-bar" class="batch-action-bar" style="display:none">
@@ -1391,6 +1402,7 @@ SETUP:
         <option value="lost">流失</option>
       </select>
       <span style="font-size:12px;color:var(--gray-mid)" id="pl-count"></span>
+      <button class="rf-btn" id="rf-pipeline" onclick="panelRefresh('pipeline',this)" title="刷新 Pipeline 数据">🔄</button>
     </div>
     <div style="display:grid;grid-template-columns:28px 1fr 100px 110px 55px 70px;gap:10px;padding:6px 14px;font-size:10px;font-weight:700;color:var(--gray-mid);text-transform:uppercase;letter-spacing:.5px">
       <div></div><div>公司</div><div>状态</div><div>下次跟进</div><div>记录</div><div>操作</div>
@@ -1517,7 +1529,10 @@ SETUP:
   <div id="panel-analytics" class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
       <h2 style="font-size:16px;font-weight:700;color:var(--blue)">📈 Sales Analytics</h2>
-      <button class="export-btn" onclick="exportCSV()" title="将当前所有客户数据导出为 CSV 文件，可用 Excel 打开">⬇ 导出 CSV</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="rf-btn" id="rf-analytics" onclick="panelRefresh('analytics',this)" title="刷新数据分析">🔄 刷新数据</button>
+        <button class="export-btn" onclick="exportCSV()" title="将当前所有客户数据导出为 CSV 文件，可用 Excel 打开">⬇ 导出 CSV</button>
+      </div>
     </div>
     <div class="metrics-row" id="an-metrics"></div>
     <div class="two-col">
@@ -1737,6 +1752,7 @@ SETUP:
           <span style="font-size:12px;font-weight:700;color:var(--orange);flex-shrink:0">📊 本月额度</span>
           <div class="hunter-quota-track"><div class="hunter-quota-fill" id="hunter-quota-fill" style="width:0%"></div></div>
           <span id="hunter-quota-text" style="color:var(--gray);font-size:12px;white-space:nowrap">查询中…</span>
+          <button class="rf-btn rf-btn-sm" id="rf-hunter-quota" onclick="panelRefresh('hunter-quota',this)" title="刷新 Hunter.io 剩余配额">🔄</button>
         </div>
         <button class="hunter-batch-btn" id="hunter-batch-btn" onclick="runHunterBatchSearch()" data-tip="自动为所有客户查询域名邮箱，每个客户消耗1次配额" title="自动批量查询所有客户的域名邮箱，免费额度25次/月">
           🔍 一键搜索全部客户邮箱
@@ -2271,7 +2287,7 @@ SETUP:
   <div id="panel-kpi" class="panel">
     <div class="kpi-header">
       <h2 style="font-size:16px;font-weight:700;color:var(--blue)">📊 KPI 实时仪表板</h2>
-      <button onclick="renderKPIPanel()" title="刷新 KPI 仪表板数据" style="padding:5px 12px;background:var(--blue);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🔄 刷新</button>
+      <button class="rf-btn" id="rf-kpi" onclick="panelRefresh('kpi',this)" title="刷新 KPI 仪表板数据">🔄 刷新KPI</button>
     </div>
     <div id="kpi-content"></div>
   </div>
@@ -3549,6 +3565,83 @@ async function _loadHomeHunterQuota() {
     }
   } catch(e) {
     if (rightEl) { rightEl.textContent = '网络错误'; rightEl.style.color = 'var(--gray-mid)'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  UNIFIED PANEL REFRESH
+// ═══════════════════════════════════════════════════
+/**
+ * panelRefresh(key, btn)
+ * Generic refresh handler for all refresh buttons.
+ * Shows ⏳ on the button, executes the relevant action,
+ * then restores the label and shows a toast.
+ */
+async function panelRefresh(key, btn) {
+  const origText = btn ? btn.textContent : '';
+  const origHtml = btn ? btn.innerHTML  : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳'; }
+
+  const done = () => {
+    if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+  };
+
+  try {
+    switch (key) {
+      case 'home':
+        renderHomePanel();
+        showSyncFlash('✅ 首页已刷新', 'ok');
+        break;
+
+      case 'list':
+        renderList();
+        if (typeof updateGlobalFilterBtn === 'function') updateGlobalFilterBtn();
+        showSyncFlash('✅ 客户库已刷新', 'ok');
+        break;
+
+      case 'pipeline':
+        renderPipeline();
+        showSyncFlash('✅ Pipeline 已刷新', 'ok');
+        break;
+
+      case 'analytics':
+        renderAnalytics();
+        showSyncFlash('✅ 数据分析已刷新', 'ok');
+        break;
+
+      case 'kpi':
+        if (typeof renderKPIPanel === 'function') renderKPIPanel();
+        showSyncFlash('✅ KPI 已刷新', 'ok');
+        break;
+
+      case 'hunter-quota':
+        await fetchHunterQuota();
+        showSyncFlash('✅ Hunter 配额已刷新', 'ok');
+        break;
+
+      case 'quota-card':
+        // Refresh SerpAPI display (synchronous, re-reads localStorage) by re-rendering home quota card area
+        await _loadHomeHunterQuota();
+        // Also refresh the SerpAPI displayed value
+        if (typeof serpUpdateQuotaDisplay === 'function') serpUpdateQuotaDisplay();
+        showSyncFlash('✅ 配额状态已刷新', 'ok');
+        break;
+
+      case 'serp':
+        // Re-run the last search with force=true (skips duplicate check)
+        serpSearch(true);
+        // Toast is shown inside serpSearch on success; show a brief indicator
+        showSyncFlash('🔄 正在重新搜索…', 'info');
+        break;
+
+      default:
+        break;
+    }
+  } catch(e) {
+    console.warn('[panelRefresh] error:', e);
+  } finally {
+    // Slight delay so the ⏳ is visible even for instant operations
+    setTimeout(done, 400);
   }
 }
 
@@ -7782,7 +7875,10 @@ function renderHomePanel() {
         const sBarC = sWarn ? '#EF5350' : '#43A047';
         const sNumC = sWarn ? 'var(--red)' : '#2E7D32';
         return `<div class="home-card" id="home-quota-card">
-          <div class="home-card-title">📊 今日配额状态</div>
+          <div class="home-card-title" style="justify-content:space-between">
+            <span>📊 今日配额状态</span>
+            <button class="rf-btn rf-btn-sm" id="rf-quota-card" onclick="panelRefresh('quota-card',this)" title="重新获取各 API 剩余次数">🔄</button>
+          </div>
           <div class="home-prog-wrap">
             <div class="home-prog-label">
               <span style="font-weight:600">SerpAPI 月搜索</span>
@@ -9167,7 +9263,7 @@ async function serpSearch(force = false) {
     _serpSaveHistoryRecord(keyword, country, filtered.length);
     serpRenderHistory();
 
-    // Problem 4: Batch import button for results with emails
+    // Batch import button + re-search button in status bar
     const emailResultCount = filtered.filter(r => r._emails && r._emails.length > 0).length;
     const batchBtnHtml = emailResultCount > 0
       ? `<button id="serp-batch-btn" class="serp-batch-btn" onclick="serpBatchImport()" title="批量导入全部有邮箱的结果，自动跳过重复">⬇️ 导入全部有邮箱(${emailResultCount}个)</button>`
@@ -9176,7 +9272,7 @@ async function serpSearch(force = false) {
     stat.style.alignItems = 'center';
     stat.style.justifyContent = 'space-between';
     stat.style.gap = '8px';
-    stat.innerHTML = `<span>${statMsg}</span>${batchBtnHtml}`;
+    stat.innerHTML = `<span>${statMsg}</span><span style="display:flex;gap:6px;align-items:center;flex-shrink:0">${batchBtnHtml}<button class="rf-btn rf-btn-sm" id="rf-serp" onclick="panelRefresh('serp',this)" title="用相同关键词重新搜索">🔄 重搜</button></span>`;
 
     // Render results
     wrap.innerHTML = filtered.map((r, i) => {
