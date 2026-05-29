@@ -945,6 +945,30 @@ SETUP:
   .sph-pill{padding:5px 11px;background:#E8EAF6;border:1.5px solid #C5CAE9;border-radius:20px;font-size:11px;color:#283593;cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:600}
   .sph-pill:hover{background:#C5CAE9;border-color:#9FA8DA}
   .sph-pill.sph-pill-sel{background:#3949AB;color:white;border-color:#3949AB}
+  /* search history */
+  #serp-hist-warn{background:#FFF8E1;border:1.5px solid #FFD54F;border-radius:7px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#E65100;display:none;line-height:1.6}
+  #serp-hist-warn .hw-btns{display:flex;gap:8px;margin-top:8px}
+  .hw-btn-go{padding:5px 14px;background:#FB8C00;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+  .hw-btn-go:hover{background:#EF6C00}
+  .hw-btn-skip{padding:5px 14px;background:#ECEFF1;color:#546E7A;border:none;border-radius:6px;font-size:12px;cursor:pointer}
+  .hw-btn-skip:hover{background:#CFD8DC}
+  #serp-hist-panel{background:white;border:1.5px solid #E0E0E0;border-radius:8px;margin-bottom:12px;overflow:hidden}
+  .serp-hist-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;cursor:pointer;user-select:none}
+  .serp-hist-hd:hover{background:#FAFAFA}
+  .serp-hist-hd-left{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#37474F}
+  .serp-hist-toggle{font-size:11px;color:#90A4AE;transition:transform .2s}
+  #serp-hist-body{display:none;border-top:1px solid #F0F0F0;max-height:300px;overflow-y:auto}
+  .serp-hist-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #F8FAFC;font-size:12px}
+  .serp-hist-row:last-child{border-bottom:none}
+  .serp-hist-row:hover{background:#F5F7FF}
+  .serp-hist-kw{flex:1;font-weight:600;color:#283593;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .serp-hist-meta{color:#90A4AE;font-size:11px;white-space:nowrap;flex-shrink:0}
+  .serp-hist-cnt{font-size:11px;color:#43A047;font-weight:700;white-space:nowrap;flex-shrink:0;min-width:40px;text-align:right}
+  .serp-hist-rebtn{padding:3px 10px;background:#E8EAF6;color:#3949AB;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .serp-hist-rebtn:hover{background:#C5CAE9}
+  .serp-hist-clear{padding:3px 10px;background:#FFEBEE;color:var(--red);border:1px solid #FFCDD2;border-radius:5px;font-size:11px;cursor:pointer}
+  .serp-hist-clear:hover{background:#FFCDD2}
+  .serp-hist-empty{padding:14px;text-align:center;font-size:12px;color:#90A4AE}
 
   /* ── ONBOARDING MULTI-STEP ── */
   .ob-steps{display:flex;gap:3px;margin-bottom:16px}
@@ -2063,6 +2087,30 @@ SETUP:
       <!-- 搜索区域（Key 填好后显示） -->
       <div id="serp-main" style="display:none">
         <div class="serp-section-hd">🔍 关键词搜索</div>
+
+        <!-- 搜索历史折叠面板 -->
+        <div id="serp-hist-panel">
+          <div class="serp-hist-hd" onclick="serpToggleHistory()">
+            <div class="serp-hist-hd-left">
+              <span>📋 搜索历史</span>
+              <span id="serp-hist-count" style="font-size:11px;color:#90A4AE;font-weight:400"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="serp-hist-clear" onclick="event.stopPropagation();serpClearHistory()" title="清空全部搜索历史">🗑️ 清空</button>
+              <span class="serp-hist-toggle" id="serp-hist-arrow">▶</span>
+            </div>
+          </div>
+          <div id="serp-hist-body"><!-- rendered by serpRenderHistory() --></div>
+        </div>
+
+        <!-- 重复搜索警告横幅 -->
+        <div id="serp-hist-warn">
+          <span id="serp-hist-warn-msg"></span>
+          <div class="hw-btns">
+            <button class="hw-btn-go" onclick="serpSearch(true)">继续搜索</button>
+            <button class="hw-btn-skip" onclick="document.getElementById('serp-hist-warn').style.display='none'">跳过</button>
+          </div>
+        </div>
 
         <!-- 词库快选行 -->
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
@@ -8339,6 +8387,91 @@ function aplOpenSearch() {
 // ═══════════════════════════════════════════════════
 const SERP_KEY_STORE    = 'ng_serp_api_key';
 const SERP_MONTHLY_STORE = 'ng_serp_monthly_count';
+const SERP_HIST_KEY     = 'ng_serp_history'; // _nativeLS only, NOT synced
+
+// ── Search history helpers ────────────────────────
+function _serpLoadHistory() {
+  try { return JSON.parse(_nativeLS.getItem(SERP_HIST_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function _serpSaveHistoryRecord(kw, country, count) {
+  const hist = _serpLoadHistory();
+  hist.unshift({ kw, country: country || '', time: new Date().toISOString(), count });
+  // Keep max 50 records
+  _nativeLS.setItem(SERP_HIST_KEY, JSON.stringify(hist.slice(0, 50)));
+}
+/**
+ * Check if keyword was searched within last 7 days.
+ * Returns the matching record or null.
+ */
+function _serpCheckDuplicate(kw) {
+  const hist = _serpLoadHistory();
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  return hist.find(h => h.kw === kw && new Date(h.time).getTime() > cutoff) || null;
+}
+function serpClearHistory() {
+  if (!confirm('确定清空全部搜索历史？')) return;
+  _nativeLS.removeItem(SERP_HIST_KEY);
+  serpRenderHistory();
+}
+function serpToggleHistory() {
+  const body  = document.getElementById('serp-hist-body');
+  const arrow = document.getElementById('serp-hist-arrow');
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display  = open ? 'none' : 'block';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
+  if (!open) serpRenderHistory(); // refresh on open
+}
+function serpRenderHistory() {
+  const body = document.getElementById('serp-hist-body');
+  const countEl = document.getElementById('serp-hist-count');
+  if (!body) return;
+  const hist = _serpLoadHistory();
+  if (countEl) countEl.textContent = hist.length ? `(${hist.length} 条)` : '';
+  if (!hist.length) {
+    body.innerHTML = '<div class="serp-hist-empty">暂无搜索历史</div>';
+    return;
+  }
+  const rows = hist.slice(0, 20).map(h => {
+    const t = new Date(h.time);
+    const ago = _serpTimeAgo(t);
+    const kwSafe  = escHtml(h.kw);
+    const coSafe  = h.country ? escHtml(h.country) : '不限';
+    const kwData  = h.kw.replace(/"/g, '&quot;');
+    const coData  = (h.country||'').replace(/"/g, '&quot;');
+    return `<div class="serp-hist-row">
+      <div class="serp-hist-kw" title="${kwSafe}">${kwSafe}</div>
+      <div class="serp-hist-meta">${coSafe} · ${ago}</div>
+      <div class="serp-hist-cnt">${h.count} 条</div>
+      <button class="serp-hist-rebtn" onclick="serpReSearch('${kwData}','${coData}')" title="重新搜索此关键词">🔄 重搜</button>
+    </div>`;
+  }).join('');
+  body.innerHTML = rows;
+}
+function _serpTimeAgo(date) {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hrs  = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1)   return '刚刚';
+  if (mins < 60)  return `${mins}分钟前`;
+  if (hrs  < 24)  return `${hrs}小时前`;
+  if (days < 30)  return `${days}天前`;
+  return date.toLocaleDateString('zh-CN', { month:'numeric', day:'numeric' });
+}
+function serpReSearch(kw, country) {
+  const kwEl = document.getElementById('serp-keyword');
+  const coEl = document.getElementById('serp-country-sel');
+  if (kwEl) kwEl.value = kw;
+  if (coEl) { coEl.value = country; serpUpdateExamples(); }
+  // Close history panel, then search (force=true to bypass dup warning)
+  const body  = document.getElementById('serp-hist-body');
+  const arrow = document.getElementById('serp-hist-arrow');
+  if (body)  body.style.display = 'none';
+  if (arrow) arrow.style.transform = '';
+  serpSearch(true);
+}
 let _serpResults = [];       // raw result objects from last search
 let _serpSearchCountry = null; // country object locked at search time (null = no country selected)
 
@@ -8503,7 +8636,7 @@ function serpCopyEmail(email) {
   });
 }
 
-async function serpSearch() {
+async function serpSearch(force = false) {
   const key = _nativeLS.getItem(SERP_KEY_STORE);
   if (!key) { alert('请先保存 SerpAPI Key'); return; }
 
@@ -8513,6 +8646,21 @@ async function serpSearch() {
   const keyword = document.getElementById('serp-keyword')?.value.trim() || '';
   const country = document.getElementById('serp-country-sel')?.value.trim() || '';
   if (!keyword) { alert('请输入搜索关键词'); return; }
+
+  // ── Duplicate-search check ──────────────────────
+  const warnEl = document.getElementById('serp-hist-warn');
+  if (!force) {
+    const dup = _serpCheckDuplicate(keyword);
+    if (dup) {
+      const daysAgo = Math.max(1, Math.floor((Date.now() - new Date(dup.time).getTime()) / 86400000));
+      const msgEl = document.getElementById('serp-hist-warn-msg');
+      if (msgEl) msgEl.textContent =
+        `⚠️ 该关键词于 ${daysAgo} 天前已搜索过，返回 ${dup.count} 条结果，是否继续？`;
+      if (warnEl) warnEl.style.display = 'block';
+      return;
+    }
+  }
+  if (warnEl) warnEl.style.display = 'none';
 
   // Lock the country at search time so imports use the right country even if the
   // user changes the dropdown after the search finishes (Bug 2 fix).
@@ -8580,6 +8728,10 @@ async function serpSearch() {
     stat.style.color = '#2E7D32';
     stat.textContent = `✅ 找到 ${organic.length} 条结果` +
       (totalEmails > 0 ? `，自动识别到 ${totalEmails} 个邮箱地址 📧` : '');
+
+    // Save to search history
+    _serpSaveHistoryRecord(keyword, country, organic.length);
+    serpRenderHistory();
 
     // Render results
     wrap.innerHTML = organic.map((r, i) => {
