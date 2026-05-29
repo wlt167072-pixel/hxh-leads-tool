@@ -933,6 +933,13 @@ SETUP:
   #help-float-btn::after{content:'新手帮助';position:absolute;right:58px;top:50%;transform:translateY(-50%);background:#263238;color:white;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
   #help-float-btn:hover::after{opacity:1}
 
+  /* ── CONTACT CHANNEL GUIDES ── */
+  .ch-steps{margin:8px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+  .ch-steps li{display:flex;gap:8px;font-size:12px;color:#455A64;line-height:1.55}
+  .ch-step-num{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;margin-top:1px}
+  .ch-note{margin-top:10px;background:#ECEFF1;border-radius:6px;padding:8px 12px;font-size:11px;color:#546E7A;line-height:1.7}
+  .ch-note b{color:#37474F}
+  .ch-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;vertical-align:middle;margin-left:6px}
   /* ── SERP EMPTY PLACEHOLDER ── */
   .serp-placeholder{padding:18px;background:#F5F7FF;border-radius:8px;border:2px dashed #C5CAE9}
   .sph-title{font-size:12px;font-weight:700;color:#3949AB;margin-bottom:10px}
@@ -1577,14 +1584,27 @@ SETUP:
           <div style="background:#E8F5E9;padding:9px 14px;display:flex;align-items:center;gap:10px">
             <span style="font-size:18px">🌐</span>
             <div style="flex:1">
-              <span style="font-weight:700;color:#2E7D32;font-size:13px">① SerpAPI — 全自动搜索（找新市场首选）</span>
-              <span style="font-size:11px;color:#546E7A;margin-left:10px">100 次/月免费 · 无需插件 · 自动识别邮箱</span>
+              <span style="font-weight:700;color:#2E7D32;font-size:13px">① SerpAPI — 全自动搜索</span>
+              <span class="ch-badge" style="background:#C8E6C9;color:#1B5E20">找新市场首选</span>
+              <div style="font-size:11px;color:#546E7A;margin-top:2px">100 次/月免费 · 无需插件 · 自动识别邮箱</div>
             </div>
-            <button onclick="switchTab('global')" style="padding:4px 12px;background:#2E7D32;color:white;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">→ 去全球搜索</button>
+            <button onclick="switchTab('global')" style="padding:5px 14px;background:#2E7D32;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">→ 去全球搜索</button>
           </div>
-          <div style="padding:10px 14px;font-size:12px;color:#455A64;line-height:1.7">
-            <b>适合场景：</b>从零开始找新市场，不知道哪些公司是经销商<br>
-            <b>操作步骤：</b>① 切换到「全球搜索」Tab → ② 保存 SerpAPI Key → ③ 选词库关键词 → ④ 点「⚡ 填入并搜索」→ ⑤ 结果中点蓝色邮箱复制 → ⑥ 点「导入」保存到客户库
+          <div style="padding:12px 14px">
+            <div style="font-size:11px;font-weight:700;color:#2E7D32;margin-bottom:6px">🕐 什么时候用：完全不认识这个市场，从零开始找客户</div>
+            <ol class="ch-steps">
+              <li><span class="ch-step-num" style="background:#2E7D32">1</span><span>点上方「→ 去全球搜索」切换到全球搜索 Tab</span></li>
+              <li><span class="ch-step-num" style="background:#2E7D32">2</span><span>在 <b>API Key</b> 输入框填入 SerpAPI Key 并点保存（首次使用才需要）</span></li>
+              <li><span class="ch-step-num" style="background:#2E7D32">3</span><span>从「<b>📚 词库</b>」下拉选择关键词类型，如「经销商联系邮箱」</span></li>
+              <li><span class="ch-step-num" style="background:#2E7D32">4</span><span>点「<b>⚡ 填入并搜索</b>」— 自动填词并立即开始搜索</span></li>
+              <li><span class="ch-step-num" style="background:#2E7D32">5</span><span>结果中<b>蓝色标注</b>的就是识别到的邮箱，点击即可复制</span></li>
+              <li><span class="ch-step-num" style="background:#2E7D32">6</span><span>点每条结果下方的「<b>⬇️ 导入</b>」把客户存入客户库</span></li>
+              <li><span class="ch-step-num" style="background:#2E7D32">7</span><span>切换到「<b>📋 全部客户</b>」Tab 查看导入结果</span></li>
+            </ol>
+            <div class="ch-note">
+              ⚠️ <b>注意：</b>每月 100 次配额，用完当月无法继续搜索（次月自动重置）<br>
+              🌐 <b>网络：</b>部分网络环境需开启 <b>CORS Unblock 插件</b>或科学上网才能正常调用
+            </div>
           </div>
         </div>
 
@@ -1593,14 +1613,27 @@ SETUP:
           <div style="background:#FFF3E0;padding:9px 14px;display:flex;align-items:center;gap:10px">
             <span style="font-size:18px">🎯</span>
             <div style="flex:1">
-              <span style="font-weight:700;color:#E65100;font-size:13px">② Hunter.io — 域名邮箱批量查询（T2客户补全首选）</span>
-              <span style="font-size:11px;color:#546E7A;margin-left:10px">25 次/月免费 · 需已知官网域名</span>
+              <span style="font-weight:700;color:#E65100;font-size:13px">② Hunter.io — 域名邮箱批量查询</span>
+              <span class="ch-badge" style="background:#FFE0B2;color:#BF360C">T2客户补全首选</span>
+              <div style="font-size:11px;color:#546E7A;margin-top:2px">25 次/月免费 · 需已知客户官网域名</div>
             </div>
-            <a href="https://hunter.io/users/sign_up" target="_blank" style="padding:4px 12px;background:#E65100;color:white;border-radius:5px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">免费注册 →</a>
+            <a href="https://hunter.io/users/sign_up" target="_blank" style="padding:5px 14px;background:#E65100;color:white;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">免费注册 →</a>
           </div>
-          <div style="padding:10px 14px;font-size:12px;color:#455A64;line-height:1.7">
-            <b>适合场景：</b>已有客户官网，需要查询该公司所有邮箱（联系人+部门）<br>
-            <b>操作步骤：</b>① 下方填入 Hunter.io API Key → ② 点保存 → ③ 点「🔍 一键搜索全部客户邮箱」→ ④ 系统自动扫描所有客户并填入邮箱
+          <div style="padding:12px 14px">
+            <div style="font-size:11px;font-weight:700;color:#E65100;margin-bottom:6px">🕐 什么时候用：客户已在库里，有官网域名，要批量查邮箱</div>
+            <ol class="ch-steps">
+              <li><span class="ch-step-num" style="background:#E65100">1</span><span>去 <a href="https://hunter.io/users/sign_up" target="_blank" style="color:#E65100;font-weight:700">hunter.io</a> 免费注册账号</span></li>
+              <li><span class="ch-step-num" style="background:#E65100">2</span><span>登录后点右上角头像 → <b>API</b> → 复制 API Key</span></li>
+              <li><span class="ch-step-num" style="background:#E65100">3</span><span>回到本工具，在下方输入框粘贴 Key，点「<b>保存</b>」</span></li>
+              <li><span class="ch-step-num" style="background:#E65100">4</span><span>点「<b>🔍 一键搜索全部客户邮箱</b>」</span></li>
+              <li><span class="ch-step-num" style="background:#E65100">5</span><span>系统自动用每个客户的官网域名查询邮箱并填入客户档案</span></li>
+              <li><span class="ch-step-num" style="background:#E65100">6</span><span>查完后在客户卡片的「<b>联系方式</b>」区查看邮箱填入结果</span></li>
+            </ol>
+            <div class="ch-note">
+              ⚠️ <b>注意：</b>每月 25 次，每次查一个域名，客户数多时配额消耗快<br>
+              📧 <b>限制：</b>只能查公司域名邮箱（如 xxx@mantrac.com），<b>查不到 Gmail 等私人邮箱</b><br>
+              🌐 <b>前提：</b>客户档案中必须已填写官网地址，否则无法查询
+            </div>
           </div>
         </div>
 
@@ -1609,14 +1642,29 @@ SETUP:
           <div style="background:#F3E5F5;padding:9px 14px;display:flex;align-items:center;gap:10px">
             <span style="font-size:18px">🚀</span>
             <div style="flex:1">
-              <span style="font-weight:700;color:var(--purple);font-size:13px">③ Apollo.io — 精准联系人（找采购经理/总监首选）</span>
-              <span style="font-size:11px;color:#546E7A;margin-left:10px">50 次/月免费 · 需 HXH Chrome 插件</span>
+              <span style="font-weight:700;color:var(--purple);font-size:13px">③ Apollo.io — 精准联系人挖掘</span>
+              <span class="ch-badge" style="background:#E1BEE7;color:#4A148C">大客户精准开发用</span>
+              <div style="font-size:11px;color:#546E7A;margin-top:2px">50 次/月免费 · 需 HXH Chrome 插件</div>
             </div>
-            <a href="https://app.apollo.io" target="_blank" style="padding:4px 12px;background:var(--purple);color:white;border-radius:5px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">打开 Apollo →</a>
+            <a href="https://app.apollo.io" target="_blank" style="padding:5px 14px;background:var(--purple);color:white;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">打开 Apollo →</a>
           </div>
-          <div style="padding:10px 14px;font-size:12px;color:#455A64;line-height:1.7">
-            <b>适合场景：</b>找到公司后需要精准联系具体联系人（采购经理、运营总监等）<br>
-            <b>操作步骤：</b>① 安装 HXH Apollo Chrome 插件 → ② 在下方输入公司名点「🚀 在 Apollo 搜索」→ ③ Apollo 页面出现绿色浮动按钮时点击保存 → ④ 回到本页点蓝色「📥 粘贴 Apollo 数据」自动填入
+          <div style="padding:12px 14px">
+            <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">🕐 什么时候用：已知目标公司，要找具体采购经理/总监姓名+邮箱</div>
+            <ol class="ch-steps">
+              <li><span class="ch-step-num" style="background:var(--purple)">1</span><span>先安装 <b>HXH Apollo Chrome 插件</b>（<a href="#" style="color:var(--purple);font-weight:700">点此安装插件</a>）</span></li>
+              <li><span class="ch-step-num" style="background:var(--purple)">2</span><span>打开 <a href="https://app.apollo.io" target="_blank" style="color:var(--purple);font-weight:700">apollo.io</a> 并登录免费账号</span></li>
+              <li><span class="ch-step-num" style="background:var(--purple)">3</span><span>在下方输入<b>公司名</b>，点「<b>🚀 在 Apollo 搜索</b>」</span></li>
+              <li><span class="ch-step-num" style="background:var(--purple)">4</span><span>Apollo 页面自动打开该公司联系人列表，找到采购/业务相关联系人</span></li>
+              <li><span class="ch-step-num" style="background:var(--purple)">5</span><span>找到目标联系人后，点击解锁其联系方式</span></li>
+              <li><span class="ch-step-num" style="background:var(--purple)">6</span><span>等页面右下角出现绿色浮动按钮「<b>✅ 已识别联系方式，点击保存</b>」</span></li>
+              <li><span class="ch-step-num" style="background:var(--purple)">7</span><span>点击绿色按钮保存联系方式到剪贴板</span></li>
+              <li><span class="ch-step-num" style="background:var(--purple)">8</span><span>切回本工具，点右下角蓝色「<b>📥 粘贴 Apollo 数据</b>」按钮自动填入</span></li>
+            </ol>
+            <div class="ch-note">
+              ⚠️ <b>注意：</b>免费账号 50 次/月，每次解锁一个联系人消耗 1 次<br>
+              🌍 <b>覆盖率：</b>非洲小公司覆盖率较低，可能搜不到；建议<b>只用于 T1 优质大客户</b><br>
+              🔌 <b>插件：</b>必须安装 HXH Apollo Chrome 插件才能一键保存联系方式
+            </div>
           </div>
         </div>
 
