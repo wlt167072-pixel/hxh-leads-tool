@@ -933,6 +933,20 @@ SETUP:
   #help-float-btn::after{content:'新手帮助';position:absolute;right:58px;top:50%;transform:translateY(-50%);background:#263238;color:white;font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
   #help-float-btn:hover::after{opacity:1}
 
+  /* ── CARD EXTRA FIELDS + QUICK BUTTONS ── */
+  .c-fields{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-top:8px;padding-top:8px;border-top:1px dashed #ECEFF1}
+  .c-field{display:flex;align-items:baseline;gap:4px;font-size:10px;line-height:1.5;overflow:hidden;min-width:0}
+  .c-field-ico{flex-shrink:0;font-size:9px;opacity:.7}
+  .c-field-val{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#37474F;font-weight:500}
+  .c-field-empty{color:#B0BEC5!important;font-style:italic;font-weight:400!important}
+  .c-quick-btns{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+  .c-qbtn{padding:3px 9px;border:none;border-radius:12px;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0;line-height:1.4}
+  .c-qbtn-hunter{background:#FFF3E0;color:#E65100;border:1px solid #FFCC80}
+  .c-qbtn-hunter:hover{background:#FFE0B2}
+  .c-qbtn-apollo{background:#F3E5F5;color:#7B1FA2;border:1px solid #CE93D8}
+  .c-qbtn-apollo:hover{background:#E1BEE7}
+  .c-qbtn-letter{background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9}
+  .c-qbtn-letter:hover{background:#BBDEFB}
   /* ── CONTACT CHANNEL GUIDES ── */
   .ch-steps{margin:8px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:5px}
   .ch-steps li{display:flex;gap:8px;font-size:12px;color:#455A64;line-height:1.55}
@@ -1758,7 +1772,7 @@ SETUP:
     </div>
 
     <!-- Apollo.io 引导式搜索（配合 Chrome 插件） -->
-    <div class="card apl-module">
+    <div class="card apl-module" id="apl-section">
       <div class="card-title" style="color:var(--purple)">🚀 Apollo.io 引导式搜索
         <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--gray-mid)">配合 HXH Chrome 插件使用</span>
       </div>
@@ -3129,13 +3143,14 @@ function renderList() {
 
   // ── Render NG cards ──────────────────────────────
   let html = ngFiltered.map(c => {
-    const cd        = getCD(c.id);
+    const cd         = getCD(c.id);
+    const ct         = getGSContact(c.id);
     const claimBadge = getClaimBadge(c.id, true);
-    const bk        = `ng:${c.id}`;
-    const bSel      = _batchSel.has(bk);
-    const clickAttr = _batchMode
+    const bk         = `ng:${c.id}`;
+    const bSel       = _batchSel.has(bk);
+    const clickAttr  = _batchMode
       ? `onclick="batchToggleCard('${bk}',event)"`
-      : `onclick="selectCustomer(${c.id})"`;
+      : `onclick="cardClickToContact(${c.id},false)"`;
     return `<div class="c-card${selectedId===c.id&&!_batchMode?' selected':''}${bSel?' batch-selected':''}" ${clickAttr} id="cc-${c.id}" data-bk="${bk}">
       <div class="batch-cb-wrap"><input type="checkbox" class="batch-cb" ${bSel?'checked':''}></div>
       <button class="c-del-btn" onclick="deleteCustomer(${c.id},event)" title="删除此客户">🗑️</button>
@@ -3143,9 +3158,14 @@ function renderList() {
       <div class="c-strip strip-${c.tier}"></div>
       <div class="c-head" style="padding-top:24px"><div class="c-name">${c.company}</div><div class="c-id">#${c.id}</div></div>
       <div class="c-city">📍 ${c.city}</div>
-      <div class="c-type">${c.type}</div>
       <div class="c-need">🎯 ${c.need}</div>
-      <div class="c-foot">
+      ${_cardFieldsHtml(c, ct, false)}
+      <div class="c-quick-btns" onclick="event.stopPropagation()">
+        <button class="c-qbtn c-qbtn-hunter" onclick="cardQuickHunter(${c.id},false,event)" title="用 Hunter.io 查该公司域名邮箱">📧 查邮箱</button>
+        <button class="c-qbtn c-qbtn-apollo" onclick="cardQuickApollo(${c.id},false,event)" title="去 Apollo.io 找具体联系人">🚀 Apollo</button>
+        <button class="c-qbtn c-qbtn-letter" onclick="cardQuickLetter(${c.id},event)" title="跳转到开发信 Tab 并预选此客户">✉️ 写信</button>
+      </div>
+      <div class="c-foot" style="margin-top:8px">
         ${priorityBar(c.priority)}
         <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${tierBadge(c.tier)} ${statusBadgeEl(c.id)} ${sentBadgeEl(c.id)} ${renderSourceBadge(c.id)}</div>
       </div>
@@ -3169,14 +3189,16 @@ function renderList() {
     }
     html += gsFiltered.map(c => {
       const co        = getAllCountries().find(x=>x.id===c.co)||{flag:'🌍',name:c.co};
+      const ct        = getGSContact(c.id);
       const newBadge  = c._isNew ? `<span style="font-size:9px;background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9;border-radius:8px;padding:1px 5px;font-weight:700">NEW</span>` : '';
       const claimBadge = getClaimBadge(c.id, true);
       const importLine = c.importedAt ? `<div style="font-size:10px;color:var(--gray-mid);margin-top:4px">📅 导入于 ${String(c.importedAt).slice(0,10)}</div>` : '';
       const bk        = `gs:${c.id}`;
       const bSel      = _batchSel.has(bk);
+      const safeId    = c.id.replace(/'/g, "\\'");
       const clickAttr = _batchMode
         ? `onclick="batchToggleCard('${bk}',event)"`
-        : `onclick="switchTab('letter');preSelectLetter('${c.id}')"`;
+        : `onclick="cardClickToContact('${safeId}',true)"`;
       return `<div class="c-card${bSel?' batch-selected':''}" ${clickAttr} id="cc-gs-${c.id}" style="border-left:3px solid var(--teal);position:relative" data-bk="${bk}">
         <div class="batch-cb-wrap"><input type="checkbox" class="batch-cb" ${bSel?'checked':''}></div>
         <button class="c-del-btn" onclick="event.stopPropagation();deleteGSImportedLead('${c.id}')" title="删除此客户">🗑️</button>
@@ -3184,13 +3206,16 @@ function renderList() {
         <div class="c-strip strip-${c.tier}"></div>
         <div class="c-head" style="padding-top:24px"><div class="c-name">${co.flag} ${c.company} ${newBadge}</div><div class="c-id">${c.id}</div></div>
         <div class="c-city">📍 ${c.city} · ${co.name}</div>
-        <div class="c-type">${c._typeLabel||GS_IND[c.type]||c.type}</div>
-        <div class="c-need">🎯 ${c.need}</div>
-        <div class="c-foot">
+        ${_cardFieldsHtml(c, ct, true)}
+        <div class="c-quick-btns" onclick="event.stopPropagation()">
+          <button class="c-qbtn c-qbtn-hunter" onclick="cardQuickHunter('${safeId}',true,event)" title="用 Hunter.io 查该公司域名邮箱">📧 查邮箱</button>
+          <button class="c-qbtn c-qbtn-apollo" onclick="cardQuickApollo('${safeId}',true,event)" title="去 Apollo.io 找具体联系人">🚀 Apollo</button>
+          <button class="c-qbtn c-qbtn-letter" onclick="cardQuickLetter('${safeId}',event)" title="跳转到开发信 Tab 并预选此客户">✉️ 写信</button>
+        </div>
+        <div class="c-foot" style="margin-top:8px">
           ${priorityBar(c.priority)}
           <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${tierBadge(c.tier)} ${statusBadgeEl(c.id)} ${sentBadgeEl(c.id)}</div>
         </div>
-        ${c.email ? `<div style="font-size:10px;color:var(--green);margin-top:4px">📧 ${c.email}</div>` : ''}
         ${importLine}
       </div>`;
     }).join('');
@@ -3239,6 +3264,93 @@ function renderList() {
   grid.classList.toggle('batch-mode', _batchMode);
   // Refresh bar counts based on newly rendered cards
   if (_batchMode) _batchRefreshBar();
+}
+
+// ═══════════════════════════════════════════════════
+//  CARD CLICK & QUICK-ACTION HELPERS
+// ═══════════════════════════════════════════════════
+
+/** Build the extra-fields HTML block for a customer card */
+function _cardFieldsHtml(c, ct, isGS) {
+  const fv = (ico, val) => {
+    const v = (val || '').toString().trim();
+    return `<div class="c-field"><span class="c-field-ico">${ico}</span><span class="c-field-val${v ? '' : ' c-field-empty'}">${v ? escHtml(v) : '待补充'}</span></div>`;
+  };
+  const email   = ct.email || c.email || '';
+  const website = c.website || ct.website || '';
+  const wa      = ct.whatsapp || '';
+  const person  = ct.name || ct.waName || '';
+  const phone   = ct.phone || '';
+  const typeDisp = isGS ? ((c._typeLabel || '').split(' · ')[0] || c.type || '') : (c.type || '');
+  const notesRaw = c.reason || c.notes || '';
+  const notes    = notesRaw.length > 50 ? notesRaw.slice(0, 50) + '…' : notesRaw;
+  return `<div class="c-fields">
+    ${fv('📧', email)}${fv('🌐', website)}
+    ${fv('📱', wa)}${fv('👤', person)}
+    ${fv('📞', phone)}${fv('🏷️', typeDisp)}
+    ${notes ? fv('📝', notes) + '<div></div>' : fv('📝', '')}
+  </div>`;
+}
+
+/** Card click → switch to Contacts tab, pre-fill Apollo search */
+function cardClickToContact(id, isGS) {
+  if (_batchMode) return;
+  let company = '', co = 'NG';
+  if (isGS) {
+    const lead = loadGSImportedLeads().find(l => l.id === id);
+    if (lead) { company = lead.company; co = lead.co || 'NG'; }
+  } else {
+    const c = CUSTOMERS.find(x => x.id === id);
+    if (c) { company = c.company; co = 'NG'; }
+  }
+  switchTab('contacts');
+  const aplCo  = document.getElementById('apl-company');
+  const aplSel = document.getElementById('apl-country-sel');
+  if (aplCo)  aplCo.value = company;
+  if (aplSel && co) {
+    const coObj = getAllCountries().find(c => c.id === co);
+    if (coObj) aplSel.value = coObj.name;
+  }
+  setTimeout(() => {
+    const sec = document.getElementById('apl-section');
+    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 160);
+  showSyncFlash(`📞 已定位到「${company}」— 点「🚀 在 Apollo 搜索」或使用 Hunter 查询邮箱`, 'info');
+}
+
+/** Quick button: go to Hunter with this customer's domain pre-targeted */
+function cardQuickHunter(id, isGS, event) {
+  event.stopPropagation();
+  let domain = '';
+  if (isGS) {
+    const lead = loadGSImportedLeads().find(l => l.id === id);
+    domain = (lead && lead.website) ? lead.website.replace(/^https?:\/\//, '').replace(/\/.*$/, '') : '';
+  } else {
+    const ct = getGSContact(id);
+    domain = (ct.website || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  }
+  switchTab('contacts');
+  setTimeout(() => {
+    const hunterWrap = document.getElementById('hunter-batch-wrap');
+    if (hunterWrap) hunterWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!domain) { showSyncFlash('⚠️ 该客户没有官网地址，无法用 Hunter 查询', 'info'); return; }
+    const apiKey = _nativeLS.getItem(HUNTER_KEY_STORE);
+    if (!apiKey) { showSyncFlash('⚠️ 请先保存 Hunter.io API Key', 'info'); return; }
+    showSyncFlash(`🔍 正在用 Hunter 查询 ${domain} 的邮箱…`, 'info');
+  }, 160);
+}
+
+/** Quick button: Apollo search for this customer */
+function cardQuickApollo(id, isGS, event) {
+  event.stopPropagation();
+  cardClickToContact(id, isGS);
+}
+
+/** Quick button: go to letter tab pre-selecting this customer */
+function cardQuickLetter(id, event) {
+  event.stopPropagation();
+  switchTab('letter');
+  preSelectLetter(id);
 }
 
 // ═══════════════════════════════════════════════════
