@@ -625,6 +625,60 @@ SETUP:
   .letter-guide-bar{margin-top:12px;background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .letter-guide-btn{padding:5px 14px;background:#2E7D32;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
   .letter-guide-btn:hover{background:#1B5E20}
+  /* ── FAQ ACCORDION ── */
+  .faq-wrap{background:white;border:1.5px solid #E0E0E0;border-radius:8px;margin-bottom:12px;overflow:hidden}
+  .faq-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;cursor:pointer;user-select:none;font-size:12px;font-weight:700;color:#37474F;background:#FAFAFA}
+  .faq-hd:hover{background:#F0F4F8}
+  .faq-arrow{font-size:11px;color:#90A4AE;transition:transform .2s}
+  .faq-body{display:none;padding:0 14px 2px}
+  .faq-item{border-bottom:1px solid #F5F5F5;padding:8px 0}
+  .faq-item:last-child{border-bottom:none}
+  .faq-q{display:flex;align-items:flex-start;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:#283593;padding:4px 0;user-select:none}
+  .faq-q-ico{flex-shrink:0;opacity:.7}
+  .faq-a{display:none;font-size:11px;color:#546E7A;line-height:1.7;padding:4px 0 6px 20px}
+  .faq-item.open .faq-a{display:block}
+  .faq-item.open .faq-q{color:#1565C0}
+  /* ── COLLAPSIBLE INFO CARD ── */
+  .info-card{background:white;border:1.5px solid #E0E0E0;border-radius:8px;margin-bottom:14px;overflow:hidden}
+  .info-card-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none;background:#F5F7FF}
+  .info-card-hd:hover{background:#EEF2FF}
+  .info-card-title{font-size:12px;font-weight:700;color:#3949AB;display:flex;align-items:center;gap:6px}
+  .info-card-arrow{font-size:11px;color:#7986CB;transition:transform .2s}
+  .info-card-body{display:none;padding:12px 14px;border-top:1px solid #E8EAF6}
+  .info-tbl{width:100%;border-collapse:collapse;font-size:11px}
+  .info-tbl th{background:#E8EAF6;color:#3949AB;font-weight:700;padding:5px 9px;text-align:left;border:1px solid #C5CAE9}
+  .info-tbl td{padding:5px 9px;border:1px solid #E8EAF6;color:#37474F;vertical-align:top;line-height:1.5}
+  .info-tbl tr:nth-child(even) td{background:#F8F9FF}
+  .info-tbl a{color:var(--blue);text-decoration:none}.info-tbl a:hover{text-decoration:underline}
+  /* ── KEYWORD GUIDE POPUP ── */
+  #kw-guide-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:center;justify-content:center}
+  .kw-guide-card{background:white;border-radius:12px;padding:20px 22px;width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+  .kw-guide-title{font-size:15px;font-weight:700;color:#1A237E;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+  .kw-guide-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}
+  .kw-guide-tbl th{background:#E8EAF6;color:#3949AB;font-weight:700;padding:6px 10px;text-align:left;border:1px solid #C5CAE9}
+  .kw-guide-tbl td{padding:6px 10px;border:1px solid #E8EAF6;color:#37474F;line-height:1.5}
+  .kw-guide-tbl tr:nth-child(even) td{background:#F8F9FF}
+  .kw-guide-tip{background:#E3F2FD;border-left:3px solid #1565C0;padding:8px 12px;border-radius:0 6px 6px 0;font-size:11px;color:#1565C0;line-height:1.65}
+  /* ── CORS GUIDE CARD ── */
+  .cors-guide{background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:8px;padding:12px 14px;margin-top:10px}
+  .cors-guide-title{font-size:13px;font-weight:700;color:#E65100;margin-bottom:8px}
+  .cors-steps{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+  .cors-step{display:flex;gap:8px;font-size:12px;color:#37474F;line-height:1.6;align-items:flex-start}
+  .cors-step-num{flex-shrink:0;width:20px;height:20px;background:#FF6D00;color:white;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;margin-top:1px}
+  .cors-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .cors-btn-store{padding:6px 14px;background:#FF6D00;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+  .cors-btn-retry{padding:6px 14px;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+  .cors-hint{font-size:11px;color:#546E7A;background:#FFF8E1;border-radius:5px;padding:6px 10px;border-left:2px solid #FFB74D}
+  /* ── WA STEPS CARD ── */
+  .wa-steps-card{background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:8px;margin:10px 14px 0;overflow:hidden}
+  .wa-steps-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;user-select:none}
+  .wa-steps-hd:hover{background:rgba(0,0,0,.04)}
+  .wa-steps-title{font-size:12px;font-weight:700;color:#2E7D32;display:flex;align-items:center;gap:6px}
+  .wa-steps-body{display:none;padding:10px 12px 12px;border-top:1px solid #C8E6C9}
+  .wa-step-list{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+  .wa-step-li{display:flex;gap:8px;font-size:12px;color:#1B5E20;line-height:1.6;align-items:flex-start}
+  .wa-step-n{flex-shrink:0;width:19px;height:19px;background:#2E7D32;color:white;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;margin-top:1px}
+  .wa-steps-note{font-size:11px;color:#2E7D32;background:rgba(255,255,255,.65);border-radius:5px;padding:6px 10px;border-left:2px solid #4CAF50}
   /* ── BATCH DELETE MODE ── */
   .batch-del-toggle.bd-active{background:var(--red)!important;border-color:var(--red)!important;color:white!important}
   .c-card.batch-selected{border-color:var(--red)!important;background:#FFF5F5!important}
@@ -1376,6 +1430,28 @@ SETUP:
       <button class="filter-btn batch-del-toggle" id="batch-del-toggle" onclick="toggleBatchMode()" title="进入批量删除模式，勾选多个客户一次性删除" style="border-color:var(--red);color:var(--red)">☑️ 批量删除</button>
       <button class="rf-btn" id="rf-list" onclick="panelRefresh('list',this)" title="重新加载客户库数据">🔄 刷新客户库</button>
     </div>
+    <!-- FAQ for Customer List -->
+    <div class="faq-wrap" id="faq-list">
+      <div class="faq-hd" onclick="toggleFaqPanel('faq-list')">
+        <span>❓ 常见问题</span>
+        <span class="faq-arrow" id="faq-list-arrow">▶</span>
+      </div>
+      <div class="faq-body" id="faq-list-body">
+        <div class="faq-item" onclick="toggleFaqItem(this)">
+          <div class="faq-q"><span class="faq-q-ico">Q</span><span>导入的客户找不到？</span></div>
+          <div class="faq-a">点「🔄 刷新客户库」，然后切换「⭐ 全局导入」过滤查看所有导入客户。</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaqItem(this)">
+          <div class="faq-q"><span class="faq-q-ico">Q</span><span>客户分级 T1/T2/T3 是什么意思？</span></div>
+          <div class="faq-a"><b>T1（🔴红）</b>= 评分≥7，有官网+邮箱，优先开发；<b>T2（🟡橙）</b>= 评分4-6，信息不完整，先补邮箱；<b>T3（🟢绿）</b>= 评分&lt;4，需人工核实。</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaqItem(this)">
+          <div class="faq-q"><span class="faq-q-ico">Q</span><span>认领了客户别人还能看到吗？</span></div>
+          <div class="faq-a">可以看到但不能重复认领。认领制度是防止同事重复开发同一家公司，提高整体效率。</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Batch delete action bar (visible in batch mode) -->
     <div id="batch-action-bar" class="batch-action-bar" style="display:none">
       <span style="font-size:12px;color:var(--gray);font-weight:600">批量删除模式</span>
@@ -1621,6 +1697,28 @@ SETUP:
   <!-- ══ CONTACTS ══ -->
   <div id="panel-contacts" class="panel">
 
+    <!-- FAQ for Contacts -->
+    <div class="faq-wrap" id="faq-contacts">
+      <div class="faq-hd" onclick="toggleFaqPanel('faq-contacts')">
+        <span>❓ 常见问题</span>
+        <span class="faq-arrow" id="faq-contacts-arrow">▶</span>
+      </div>
+      <div class="faq-body" id="faq-contacts-body">
+        <div class="faq-item" onclick="toggleFaqItem(this)">
+          <div class="faq-q"><span class="faq-q-ico">Q</span><span>Hunter.io 查不到邮箱？</span></div>
+          <div class="faq-a">先确认客户卡片有官网地址；该公司可能未被 Hunter 收录，改用 Apollo 或直接 Google 搜索「公司名 email contact」。</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaqItem(this)">
+          <div class="faq-q"><span class="faq-q-ico">Q</span><span>Apollo 搜不到这家公司？</span></div>
+          <div class="faq-a">非洲小公司覆盖率低属正常，改用 Hunter.io 查域名邮箱，或用 SerpAPI 搜「公司名 email contact」直接找邮箱。</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaqItem(this)">
+          <div class="faq-q"><span class="faq-q-ico">Q</span><span>HXH Apollo 插件没有反应？</span></div>
+          <div class="faq-a">打开 <code>chrome://extensions/</code> 确认插件已启用；刷新 Apollo 页面后重试；确认已登录 Apollo 账号。插件由管理员 Rey 提供。</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ 优化2: 客户分级说明卡片 ══ -->
     <div style="background:white;border-radius:10px;box-shadow:var(--shadow);padding:14px 18px;margin-bottom:14px;border-left:4px solid var(--blue)">
       <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:10px">📊 客户分级说明 — 选对联系策略事半功倍</div>
@@ -1788,6 +1886,25 @@ SETUP:
         </div>
         <button onclick="toggleWAGenerator()" style="background:rgba(255,255,255,.2);border:none;color:white;padding:5px 11px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700">✕</button>
       </div>
+      <!-- Steps card -->
+      <div class="wa-steps-card" id="wa-steps-card">
+        <div class="wa-steps-hd" onclick="toggleWASteps()">
+          <span class="wa-steps-title">📋 使用步骤 <span style="font-size:10px;font-weight:400;opacity:.7">（点击展开）</span></span>
+          <span id="wa-steps-arrow" style="font-size:11px;color:#4CAF50;transition:transform .2s">▶</span>
+        </div>
+        <div class="wa-steps-body" id="wa-steps-body">
+          <ol class="wa-step-list">
+            <li class="wa-step-li"><span class="wa-step-n">1</span><span>确认客户有 WhatsApp 号码（无号码显示「❌ 缺号码」，点「✏️ 录入」补充）</span></li>
+            <li class="wa-step-li"><span class="wa-step-n">2</span><span>用筛选按钮选择要发送的客户范围（推荐先选「🔴 Tier 1」优先发）</span></li>
+            <li class="wa-step-li"><span class="wa-step-n">3</span><span>点「📱 打开」→ WhatsApp 自动弹出并预填好消息内容</span></li>
+            <li class="wa-step-li"><span class="wa-step-n">4</span><span>检查消息内容后点发送</span></li>
+            <li class="wa-step-li"><span class="wa-step-n">5</span><span>回到工具勾选「✓ 已发」标记完成</span></li>
+            <li class="wa-step-li"><span class="wa-step-n">6</span><span>继续下一个客户</span></li>
+          </ol>
+          <div class="wa-steps-note">💡 全程手动操作，<b>零封号风险</b>；建议每天发 20–30 条，不要集中发太多。</div>
+        </div>
+      </div>
+
       <!-- Stats -->
       <div class="wa-gen-stats">
         <div class="wa-gen-stat"><div class="wn" id="wa-s-total">0</div><div class="wl">全部客户</div></div>
@@ -2254,6 +2371,7 @@ SETUP:
             </optgroup>
           </select>
           <button class="serp-btn" style="padding:5px 14px;font-size:12px" onclick="serpFillAndSearch()" data-tip="将词库关键词填入搜索框并立即搜索" title="将词库选中的关键词填入搜索框，并立即触发搜索">⚡ 填入并搜索</button>
+          <button class="rf-btn" style="border-color:#C5CAE9;color:#3949AB" onclick="document.getElementById('kw-guide-overlay').style.display='flex'" title="查看各类关键词适用场景说明">📖 选词指南</button>
         </div>
 
         <div class="serp-row">
@@ -2276,6 +2394,32 @@ SETUP:
             <div id="serp-kw-examples"><!-- populated by serpUpdateExamples() --></div>
             <div class="sph-tip" style="margin-top:10px">⬆️ 点击关键词自动填入，然后点「🔍 搜索」。每次消耗 1 次配额，共 100 次/月。</div>
             <div class="sph-tip" style="margin-top:4px">📧 搜索结果自动识别邮箱地址，蓝色标出，点击即可复制。</div>
+          </div>
+        </div>
+
+        <!-- FAQ for SerpAPI -->
+        <div class="faq-wrap" id="faq-serp" style="margin-top:14px">
+          <div class="faq-hd" onclick="toggleFaqPanel('faq-serp')">
+            <span>❓ 常见问题</span>
+            <span class="faq-arrow" id="faq-serp-arrow">▶</span>
+          </div>
+          <div class="faq-body" id="faq-serp-body">
+            <div class="faq-item" onclick="toggleFaqItem(this)">
+              <div class="faq-q"><span class="faq-q-ico">Q</span><span>搜索提示「网络请求被拦截」怎么办？</span></div>
+              <div class="faq-a">需要安装 <b>CORS Unblock</b> 插件并点击 <b>Start</b> 启动，或开启科学上网全局模式。安装地址见首页「🔧 工具配置信息」卡片。</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaqItem(this)">
+              <div class="faq-q"><span class="faq-q-ico">Q</span><span>本月额度用完了怎么办？</span></div>
+              <div class="faq-a">等下月1日自动重置（每月100次）。节省配额技巧：优先用带 <code>@</code> 符号的关键词，命中率高不浪费次数。</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaqItem(this)">
+              <div class="faq-q"><span class="faq-q-ico">Q</span><span>搜索结果全是Facebook帖子？</span></div>
+              <div class="faq-a">系统已自动过滤社交媒体帖子链接。若仍出现，可换用带 <code>site:linkedin.com</code> 的关键词，或直接用带邮箱格式的精准词。</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaqItem(this)">
+              <div class="faq-q"><span class="faq-q-ico">Q</span><span>导入后在哪里找到客户？</span></div>
+              <div class="faq-a">点「全部客户」Tab → 切换「⭐ 全局导入」过滤 → 点「🔄 刷新」即可看到所有已导入客户。</div>
+            </div>
           </div>
         </div>
       </div>
@@ -3566,6 +3710,48 @@ async function _loadHomeHunterQuota() {
   } catch(e) {
     if (rightEl) { rightEl.textContent = '网络错误'; rightEl.style.color = 'var(--gray-mid)'; }
   }
+}
+
+// ═══════════════════════════════════════════════════
+//  FAQ / COLLAPSIBLE HELPERS
+// ═══════════════════════════════════════════════════
+/** Toggle the faq-body visibility and rotate arrow */
+function toggleFaqPanel(id) {
+  const body  = document.getElementById(id + '-body');
+  const arrow = document.getElementById(id + '-arrow');
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
+}
+
+/** Toggle a single FAQ item open/closed */
+function toggleFaqItem(item) {
+  const wasOpen = item.classList.contains('open');
+  // Close all siblings in same faq-body
+  const parent = item.closest('.faq-body');
+  if (parent) parent.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+/** Toggle the collapsible info card */
+function toggleInfoCard(id) {
+  const body  = document.getElementById(id + '-body');
+  const arrow = document.getElementById(id + '-arrow');
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
+}
+
+/** Toggle WA steps card */
+function toggleWASteps() {
+  const body  = document.getElementById('wa-steps-body');
+  const arrow = document.getElementById('wa-steps-arrow');
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
 }
 
 // ═══════════════════════════════════════════════════
@@ -7905,6 +8091,27 @@ function renderHomePanel() {
           </div>
         </div>`;
       })()}
+    </div>
+
+    <div class="info-card" id="home-config-card">
+      <div class="info-card-hd" onclick="toggleInfoCard('home-config-card')">
+        <span class="info-card-title">🔧 工具配置信息</span>
+        <span class="info-card-arrow" id="home-config-card-arrow">▶</span>
+      </div>
+      <div class="info-card-body" id="home-config-card-body">
+        <table class="info-tbl">
+          <thead><tr><th>服务</th><th>地址 / 说明</th><th>免费额度</th><th>配置位置</th></tr></thead>
+          <tbody>
+            <tr><td>🌐 工具网址</td><td><a href="https://wlt167072-pixel.github.io/hxh-leads-tool/" target="_blank">wlt167072-pixel.github.io/hxh-leads-tool/</a></td><td>—</td><td>直接访问</td></tr>
+            <tr><td>🔑 注册秘钥</td><td>974955（内部保密，请勿外泄）</td><td>—</td><td>注册时填写</td></tr>
+            <tr><td>🔍 SerpAPI</td><td><a href="https://serpapi.com" target="_blank">serpapi.com</a></td><td>100次/月</td><td>全球搜索Tab → SerpAPI模块</td></tr>
+            <tr><td>📧 Hunter.io</td><td><a href="https://hunter.io" target="_blank">hunter.io</a></td><td>25次/月</td><td>联系方式Tab → Hunter模块</td></tr>
+            <tr><td>🚀 Apollo.io</td><td><a href="https://app.apollo.io" target="_blank">app.apollo.io</a></td><td>50次/月</td><td>联系方式Tab → Apollo模块</td></tr>
+            <tr><td>🔌 CORS Unblock</td><td><a href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">Chrome应用商店安装</a></td><td>免费</td><td>国内网络必装，点击Start启动</td></tr>
+            <tr><td>🧩 HXH Apollo插件</td><td>向管理员 Rey 获取安装包</td><td>免费</td><td>chrome://extensions/ 本地加载</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>`;
 
   // Async load Hunter quota for the quota card
@@ -9310,11 +9517,23 @@ async function serpSearch(force = false) {
       e.message.includes('CORS') ||
       e.message.includes('blocked')
     );
+    const corsGuideHtml = `
+      <div class="cors-guide" style="margin-top:10px">
+        <div class="cors-guide-title">🔌 解决方法：安装 CORS Unblock 插件</div>
+        <ol class="cors-steps">
+          <li class="cors-step"><span class="cors-step-num">1</span><span>点击下方按钮打开 Chrome 应用商店</span></li>
+          <li class="cors-step"><span class="cors-step-num">2</span><span>点「<b>添加至 Chrome</b>」安装插件</span></li>
+          <li class="cors-step"><span class="cors-step-num">3</span><span>点击浏览器右上角 🐞 图标 → 点「<b>Start</b>」启动</span></li>
+        </ol>
+        <div class="cors-btns">
+          <button class="cors-btn-store" onclick="window.open('https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino','_blank')">📦 打开应用商店安装</button>
+          <button class="cors-btn-retry" onclick="serpSearch(true)">✅ 已安装，重新搜索</button>
+        </div>
+        <div class="cors-hint">已安装但未启动？点击浏览器扩展图标找到 CORS Unblock → 点「Start」即可。</div>
+      </div>`;
+    stat.style.display = 'block';
     stat.innerHTML = isCors
-      ? `⚠️ <b>网络请求被拦截</b>（可能是 CORS 或防火墙限制）<br>
-         <span style="font-size:11px;font-weight:400">SerpAPI 通常支持浏览器直接调用，但部分网络环境会拦截。<br>
-         建议在 <b>科学上网</b> 状态下使用，或使用 <a href="https://chrome.google.com/webstore/detail/cors-unblock" target="_blank" style="color:var(--blue)">CORS Unblock 插件</a>。<br>
-         错误详情: ${escHtml(e.message)}</span>`
+      ? `⚠️ <b>网络请求被拦截</b>（CORS 或防火墙限制）&nbsp;·&nbsp;<span style="font-size:11px;font-weight:400">错误: ${escHtml(e.message)}</span>${corsGuideHtml}`
       : `❌ 请求失败: ${escHtml(e.message || '网络错误')}<br>
          <span style="font-size:11px;font-weight:400">请检查网络连接，或确认 serpapi.com 可访问</span>`;
   } finally {
@@ -9643,6 +9862,28 @@ function _showNextStepHint(key) {
   <div class="gs-ar-toast-title" id="gs-ar-toast-title">🔄 自动刷新</div>
   <div class="gs-ar-toast-body" id="gs-ar-toast-body" style="white-space:pre-line"></div>
   <button class="gs-ar-toast-close" onclick="document.getElementById('gs-ar-toast').style.display='none'">关闭</button>
+</div>
+
+<!-- Keyword Guide Overlay (Feature 3) -->
+<div id="kw-guide-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="kw-guide-card">
+    <div class="kw-guide-title">
+      <span>📖 关键词选词指南</span>
+      <button onclick="document.getElementById('kw-guide-overlay').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#90A4AE;line-height:1">✕</button>
+    </div>
+    <table class="kw-guide-tbl">
+      <thead><tr><th>关键词分类</th><th>适合场景</th><th>预期结果</th></tr></thead>
+      <tbody>
+        <tr><td>经销商联系邮箱</td><td>从零开始找经销商，最通用</td><td>经销商官网 + 邮箱</td></tr>
+        <tr><td>Cummins / CAT 品牌经销商</td><td>找授权品牌经销商</td><td>品牌授权商，质量高</td></tr>
+        <tr><td>二手发电机批发商</td><td>找二手机市场，与我们业务最相关</td><td>二手机商 + 买家</td></tr>
+        <tr><td>精准挖邮箱（带 @ 符号）</td><td>直接命中含邮箱的页面</td><td>高概率出邮箱</td></tr>
+        <tr><td>按场景（采矿 / 电信 / 医院）</td><td>找特定行业终端客户</td><td>行业终端用户</td></tr>
+        <tr><td>按国家</td><td>已锁定目标市场</td><td>该国本地公司</td></tr>
+      </tbody>
+    </table>
+    <div class="kw-guide-tip">💡 带 <b>"@gmail.com"</b> 的关键词命中邮箱率最高，每月 100 次配额建议优先用高价值词。搜索结果自动识别邮箱并蓝色高亮，点击即可复制。</div>
+  </div>
 </div>
 
 <!-- SerpAPI Email Dedup Confirmation Modal -->
