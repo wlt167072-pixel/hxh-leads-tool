@@ -596,6 +596,28 @@ SETUP:
   .c-del-btn{position:absolute;top:6px;right:6px;padding:2px 6px;background:#FFEBEE;color:var(--red);border:1px solid #FFCDD2;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700;opacity:0;transition:opacity .15s;z-index:2}
   .c-card:hover .c-del-btn{opacity:1}
   .c-card{position:relative}
+  /* ── CARD EXPAND ── */
+  .c-expand-hint{font-size:10px;color:#B0BEC5;text-align:center;margin-top:6px;user-select:none;letter-spacing:.4px;transition:color .15s}
+  .c-card:hover .c-expand-hint{color:#90A4AE}
+  .c-card.c-card-open .c-expand-hint{color:#1565C0}
+  @keyframes c-slide-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+  .c-expand-body{display:none;margin-top:8px;padding-top:8px;border-top:1px dashed #ECEFF1;animation:c-slide-in .15s ease}
+  .c-card.c-card-open .c-expand-body{display:block}
+  .c-card.c-card-open{border-color:#90CAF9!important;background:#FAFCFF}
+  .c-expand-notes{font-size:11px;color:#455A64;line-height:1.65;margin-bottom:8px;padding:6px 8px;background:#F5F7FA;border-radius:5px;border-left:2px solid #90CAF9;word-break:break-word;white-space:pre-wrap}
+  .c-expand-contact{font-size:11px;color:#546E7A;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px 14px}
+  .c-action-btns{display:flex;gap:6px;flex-wrap:wrap}
+  .c-abtn{padding:5px 13px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;line-height:1.4}
+  .c-abtn-contact{background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9}.c-abtn-contact:hover{background:#BBDEFB}
+  .c-abtn-letter{background:#EDE7F6;color:#6A1B9A;border:1px solid #CE93D8}.c-abtn-letter:hover{background:#D1C4E9}
+  .c-abtn-followup{background:#E8F5E9;color:#1B5E20;border:1px solid #A5D6A7}.c-abtn-followup:hover{background:#C8E6C9}
+  /* ── RESCORE BUTTON ── */
+  .rescore-btn{padding:5px 11px;background:#F3E5F5;color:#7B1FA2;border:1.5px solid #CE93D8;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .rescore-btn:hover{background:#CE93D8;color:white}
+  /* ── LETTER GUIDE BAR ── */
+  .letter-guide-bar{margin-top:12px;background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .letter-guide-btn{padding:5px 14px;background:#2E7D32;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .letter-guide-btn:hover{background:#1B5E20}
   /* ── BATCH DELETE MODE ── */
   .batch-del-toggle.bd-active{background:var(--red)!important;border-color:var(--red)!important;color:white!important}
   .c-card.batch-selected{border-color:var(--red)!important;background:#FFF5F5!important}
@@ -1330,6 +1352,7 @@ SETUP:
       <button class="filter-btn" id="filter-btn-t2" onclick="setFilter(2,this)" title="🟡 T2 普通客户：评分4-6，信息不完整，先补全邮箱再联系">🟡 Tier 2(0)</button>
       <button class="filter-btn" id="filter-btn-t3" onclick="setFilter(3,this)" title="🟢 T3 待验证：评分低于4，预置数据或低分，人工核实后开发">🟢 Tier 3(0)</button>
       <button class="filter-btn" data-filter="global" onclick="setFilter('global',this)" id="gl-import-btn" style="border-color:var(--teal);color:var(--teal)" title="只看通过 SerpAPI / Global Search 导入的客户">⭐ 全局导入(0)</button>
+      <button class="rescore-btn" onclick="rescoreSerpLeads()" title="对所有 SerpAPI 导入的客户重新评分：有邮箱+官网→T1，有官网→T2，其他→T3">🔄 重新评分</button>
       <div class="filter-sep"></div>
       <button class="filter-btn mine-btn" onclick="setFilter('mine',this)" title="只看你认领的客户">👤 我的客户</button>
       <button class="filter-btn unclaim-btn" onclick="setFilter('unclaimed',this)" title="只看还没人认领的客户">📋 未认领</button>
@@ -3164,7 +3187,7 @@ function renderList() {
     const bSel       = _batchSel.has(bk);
     const clickAttr  = _batchMode
       ? `onclick="batchToggleCard('${bk}',event)"`
-      : `onclick="cardClickToContact(${c.id},false)"`;
+      : `onclick="cardToggleExpand(${c.id},false,event)"`;
     return `<div class="c-card${selectedId===c.id&&!_batchMode?' selected':''}${bSel?' batch-selected':''}" ${clickAttr} id="cc-${c.id}" data-bk="${bk}">
       <div class="batch-cb-wrap"><input type="checkbox" class="batch-cb" ${bSel?'checked':''}></div>
       <button class="c-del-btn" onclick="deleteCustomer(${c.id},event)" title="删除此客户">🗑️</button>
@@ -3174,11 +3197,8 @@ function renderList() {
       <div class="c-city">📍 ${c.city}</div>
       <div class="c-need">🎯 ${c.need}</div>
       ${_cardFieldsHtml(c, ct, false)}
-      <div class="c-quick-btns" onclick="event.stopPropagation()">
-        <button class="c-qbtn c-qbtn-hunter" onclick="cardQuickHunter(${c.id},false,event)" title="用 Hunter.io 查该公司域名邮箱">📧 查邮箱</button>
-        <button class="c-qbtn c-qbtn-apollo" onclick="cardQuickApollo(${c.id},false,event)" title="去 Apollo.io 找具体联系人">🚀 Apollo</button>
-        <button class="c-qbtn c-qbtn-letter" onclick="cardQuickLetter(${c.id},event)" title="跳转到开发信 Tab 并预选此客户">✉️ 写信</button>
-      </div>
+      <div class="c-expand-body"></div>
+      <div class="c-expand-hint">▾ 展开操作</div>
       <div class="c-foot" style="margin-top:8px">
         ${priorityBar(c.priority)}
         <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${tierBadge(c.tier)} ${statusBadgeEl(c.id)} ${sentBadgeEl(c.id)} ${renderSourceBadge(c.id)}</div>
@@ -3212,7 +3232,7 @@ function renderList() {
       const safeId    = c.id.replace(/'/g, "\\'");
       const clickAttr = _batchMode
         ? `onclick="batchToggleCard('${bk}',event)"`
-        : `onclick="cardClickToContact('${safeId}',true)"`;
+        : `onclick="cardToggleExpand('${safeId}',true,event)"`;
       return `<div class="c-card${bSel?' batch-selected':''}" ${clickAttr} id="cc-gs-${c.id}" style="border-left:3px solid var(--teal);position:relative" data-bk="${bk}">
         <div class="batch-cb-wrap"><input type="checkbox" class="batch-cb" ${bSel?'checked':''}></div>
         <button class="c-del-btn" onclick="event.stopPropagation();deleteGSImportedLead('${c.id}')" title="删除此客户">🗑️</button>
@@ -3221,11 +3241,8 @@ function renderList() {
         <div class="c-head" style="padding-top:24px"><div class="c-name">${co.flag} ${c.company} ${newBadge}</div><div class="c-id">${c.id}</div></div>
         <div class="c-city">📍 ${c.city} · ${co.name}</div>
         ${_cardFieldsHtml(c, ct, true)}
-        <div class="c-quick-btns" onclick="event.stopPropagation()">
-          <button class="c-qbtn c-qbtn-hunter" onclick="cardQuickHunter('${safeId}',true,event)" title="用 Hunter.io 查该公司域名邮箱">📧 查邮箱</button>
-          <button class="c-qbtn c-qbtn-apollo" onclick="cardQuickApollo('${safeId}',true,event)" title="去 Apollo.io 找具体联系人">🚀 Apollo</button>
-          <button class="c-qbtn c-qbtn-letter" onclick="cardQuickLetter('${safeId}',event)" title="跳转到开发信 Tab 并预选此客户">✉️ 写信</button>
-        </div>
+        <div class="c-expand-body"></div>
+        <div class="c-expand-hint">▾ 展开操作</div>
         <div class="c-foot" style="margin-top:8px">
           ${priorityBar(c.priority)}
           <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${tierBadge(c.tier)} ${statusBadgeEl(c.id)} ${sentBadgeEl(c.id)}</div>
@@ -3318,9 +3335,17 @@ function cardClickToContact(id, isGS) {
     if (c) { company = c.company; co = 'NG'; }
   }
   switchTab('contacts');
+  // Problem 5: auto-fill Apollo inputs + highlight
   const aplCo  = document.getElementById('apl-company');
   const aplSel = document.getElementById('apl-country-sel');
-  if (aplCo)  aplCo.value = company;
+  if (aplCo) {
+    aplCo.value = company;
+    // Brief glow highlight so user sees the field was filled
+    aplCo.style.transition = 'box-shadow .3s, border-color .3s';
+    aplCo.style.boxShadow  = '0 0 0 3px rgba(21,101,192,.35)';
+    aplCo.style.borderColor = '#1565C0';
+    setTimeout(() => { aplCo.style.boxShadow = ''; aplCo.style.borderColor = ''; }, 1600);
+  }
   if (aplSel && co) {
     const coObj = getAllCountries().find(c => c.id === co);
     if (coObj) aplSel.value = coObj.name;
@@ -3329,7 +3354,7 @@ function cardClickToContact(id, isGS) {
     const sec = document.getElementById('apl-section');
     if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 160);
-  showSyncFlash(`📞 已定位到「${company}」— 点「🚀 在 Apollo 搜索」或使用 Hunter 查询邮箱`, 'info');
+  showSyncFlash(`📞 已定位到「${company}」— 公司名已填入，点「🚀 在 Apollo 搜索」或使用 Hunter 查询邮箱`, 'info');
 }
 
 /** Quick button: go to Hunter with this customer's domain pre-targeted */
@@ -3365,6 +3390,166 @@ function cardQuickLetter(id, event) {
   event.stopPropagation();
   switchTab('letter');
   preSelectLetter(id);
+}
+
+// ── Problem 2: Card expand/collapse ──────────────────────────
+function cardToggleExpand(id, isGS, event) {
+  if (_batchMode) return;
+  // Ignore clicks on interactive elements inside the card
+  const t = event && event.target;
+  if (t && (t.tagName === 'BUTTON' || t.tagName === 'A' || t.tagName === 'INPUT' ||
+      t.closest('button') || t.closest('a') || t.closest('input'))) return;
+
+  const cardId = isGS ? `cc-gs-${id}` : `cc-${id}`;
+  const card   = document.getElementById(cardId);
+  if (!card) return;
+
+  const body    = card.querySelector('.c-expand-body');
+  const isOpen  = card.classList.contains('c-card-open');
+
+  // Close all other open cards
+  document.querySelectorAll('.c-card.c-card-open').forEach(c2 => {
+    c2.classList.remove('c-card-open');
+  });
+
+  if (!isOpen) {
+    // Populate expand body on first open
+    body.innerHTML = _buildExpandBodyHtml(id, isGS);
+    card.classList.add('c-card-open');
+  }
+}
+
+function _buildExpandBodyHtml(id, isGS) {
+  let notes = '', wa = '', phone = '', person = '';
+  if (isGS) {
+    const lead = loadGSImportedLeads().find(l => l.id === id);
+    const ct   = getGSContact(id);
+    notes  = lead ? (lead.notes || lead.reason || '') : '';
+    wa     = ct.whatsapp || '';
+    phone  = ct.phone || '';
+    person = ct.name || ct.waName || '';
+  } else {
+    const c  = CUSTOMERS.find(x => x.id === id);
+    const ct = getGSContact(id);
+    notes  = c ? (c.reason || c.notes || '') : '';
+    wa     = ct.whatsapp || '';
+    phone  = ct.phone || '';
+    person = ct.name || ct.waName || '';
+  }
+
+  const notesHtml = notes
+    ? `<div class="c-expand-notes">${escHtml(notes)}</div>`
+    : '';
+  const ctRow = (wa || phone || person)
+    ? `<div class="c-expand-contact">
+        ${wa     ? `<span>📱 ${escHtml(wa)}</span>` : ''}
+        ${phone  ? `<span>📞 ${escHtml(phone)}</span>` : ''}
+        ${person ? `<span>👤 ${escHtml(person)}</span>` : ''}
+      </div>`
+    : '';
+
+  // Build safe onclick strings for action buttons
+  const idNG  = isGS ? null : id;
+  const idGS  = isGS ? id   : null;
+  const safe  = (v) => String(v).replace(/'/g, "\\'");
+  const contactOnclick = isGS ? `cardClickToContact('${safe(id)}',true)` : `cardClickToContact(${id},false)`;
+  const letterOnclick  = isGS ? `cardQuickLetter('${safe(id)}',event)` : `cardQuickLetter(${id},event)`;
+  const followupOnclick = isGS ? `cardQuickFollowup('${safe(id)}',true,event)` : `cardQuickFollowup(${id},false,event)`;
+
+  return `${notesHtml}${ctRow}
+    <div class="c-action-btns" onclick="event.stopPropagation()">
+      <button class="c-abtn c-abtn-contact" onclick="${contactOnclick}">📞 找联系方式</button>
+      <button class="c-abtn c-abtn-letter"  onclick="${letterOnclick}">✉️ 写开发信</button>
+      <button class="c-abtn c-abtn-followup" onclick="${followupOnclick}">📝 记录跟进</button>
+    </div>`;
+}
+
+/** Quick button: record follow-up for this customer */
+function cardQuickFollowup(id, isGS, event) {
+  event.stopPropagation();
+  if (!isGS) {
+    // Open the full customer detail panel for NG leads
+    selectCustomer(id);
+    setTimeout(() => {
+      const detail = document.getElementById('customer-detail');
+      if (detail) detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  } else {
+    // Open the GS contact/notes edit modal for GS leads
+    if (typeof openGSEditModal === 'function') {
+      openGSEditModal(id);
+    } else {
+      showSyncFlash('📝 请在卡片中手动记录跟进状态', 'info');
+    }
+  }
+}
+
+// ── Problem 3: Re-score SerpAPI-imported leads ────────────────
+function rescoreSerpLeads() {
+  const leads     = loadGSImportedLeads();
+  const serpLeads = leads.filter(l => l._serpImported);
+  if (!serpLeads.length) {
+    showSyncFlash('ℹ️ 没有找到 SerpAPI 导入的客户', 'info');
+    return;
+  }
+  let t1 = 0, t2 = 0, t3 = 0;
+  const updated = leads.map(l => {
+    if (!l._serpImported) return l;
+    const hasEmail   = !!(l.email   && l.email.includes('@'));
+    const hasWebsite = !!(l.website && l.website.length > 3);
+    const normalName = !!(l.company && l.company.length >= 3);
+    let tier;
+    if (hasEmail && hasWebsite && normalName) { tier = 1; t1++; }
+    else if (hasWebsite)                       { tier = 2; t2++; }
+    else                                       { tier = 3; t3++; }
+    return { ...l, tier };
+  });
+  saveGSImportedLeads(updated);
+  renderList();
+  if (typeof updateGlobalFilterBtn === 'function') updateGlobalFilterBtn();
+  showSyncFlash(`✅ 已重新评分 ${serpLeads.length} 个客户：T1: ${t1}个 · T2: ${t2}个 · T3: ${t3}个`, 'ok');
+}
+
+// ── Problem 4: Letter guide — go record follow-up ─────────────
+function letterGoToRecord() {
+  switchTab('list');
+  setTimeout(() => {
+    showSyncFlash('📝 点击客户卡片展开，点「📝 记录跟进」按钮更新发送状态', 'info');
+  }, 300);
+}
+
+// ── Problem 6: Home quota card — async Hunter query ───────────
+async function _loadHomeHunterQuota() {
+  const rightEl = document.getElementById('hq-home-right');
+  const fillEl  = document.getElementById('hq-home-fill');
+  const subEl   = document.getElementById('hq-home-sub');
+  if (!rightEl) return;
+
+  const apiKey = _nativeLS.getItem(HUNTER_KEY_STORE);
+  if (!apiKey) {
+    rightEl.textContent = '未设置 Key';
+    rightEl.style.color = 'var(--gray-mid)';
+    if (subEl) subEl.innerHTML = '<a onclick="switchTab(\'contacts\')" style="color:var(--blue);cursor:pointer;text-decoration:underline">在联系方式 Tab 设置</a>';
+    return;
+  }
+  try {
+    const resp = await fetch(`https://api.hunter.io/v2/account?api_key=${apiKey}`);
+    const data = await resp.json();
+    if (data.data && data.data.requests) {
+      const used      = data.data.requests.used      ?? 0;
+      const available = data.data.requests.available ?? 0;
+      const total     = (used + available) || 25;
+      const pct       = Math.min(100, Math.round(used / total * 100));
+      const isLow     = available < 5;
+      if (rightEl) { rightEl.textContent = `${available} 次剩余`; rightEl.style.color = isLow ? 'var(--red)' : 'var(--orange)'; }
+      if (fillEl)  { fillEl.style.width = pct + '%'; }
+      if (subEl)   { subEl.textContent = `已用 ${used}/${total} 次`; }
+    } else {
+      if (rightEl) { rightEl.textContent = '无法读取'; rightEl.style.color = 'var(--gray-mid)'; }
+    }
+  } catch(e) {
+    if (rightEl) { rightEl.textContent = '网络错误'; rightEl.style.color = 'var(--gray-mid)'; }
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -3809,7 +3994,11 @@ function renderLetterPanel() {
       <button class="copy-btn" onclick="copyLetter(this,'lp-body',${idAttr})">复制并标记已发</button>
       <div class="letter-content" id="lp-body">${escHtml(text)}</div>
     </div>
-    ${sentRow}`;
+    ${sentRow}
+    <div class="letter-guide-bar">
+      <span style="font-size:12px;color:#2E7D32;font-weight:600">✅ 复制完成后，记得去记录发送状态</span>
+      <button class="letter-guide-btn" onclick="letterGoToRecord()">→ 去记录跟进</button>
+    </div>`;
 }
 
 function toggleSentAndSync(id, ch) {
@@ -7582,7 +7771,48 @@ function renderHomePanel() {
           <button class="home-quick-btn" style="background:var(--gray-light);color:var(--gray)" onclick="showKeyboardHelp()">⌨️ 快捷键</button>
         </div>
       </div>
+
+      <!-- Quota Status -->
+      ${(() => {
+        const sd    = serpGetMonthlyCount();
+        const sUsed = sd.count || 0;
+        const sLeft = Math.max(0, 100 - sUsed);
+        const sPct  = Math.min(100, sUsed);
+        const sWarn = sLeft < 20;
+        const sBarC = sWarn ? '#EF5350' : '#43A047';
+        const sNumC = sWarn ? 'var(--red)' : '#2E7D32';
+        return `<div class="home-card" id="home-quota-card">
+          <div class="home-card-title">📊 今日配额状态</div>
+          <div class="home-prog-wrap">
+            <div class="home-prog-label">
+              <span style="font-weight:600">SerpAPI 月搜索</span>
+              <span style="font-weight:700;color:${sNumC}">${sLeft} 次剩余${sWarn?' ⚠️':''}</span>
+            </div>
+            <div class="home-prog-bar"><div class="home-prog-fill" style="width:${sPct}%;background:${sBarC}"></div></div>
+            <div style="font-size:10px;color:var(--gray-mid);margin-top:2px">已用 ${sUsed}/100 次</div>
+          </div>
+          <div class="home-prog-wrap" style="margin-top:10px">
+            <div class="home-prog-label">
+              <span style="font-weight:600">Hunter.io 月搜索</span>
+              <span id="hq-home-right" style="font-weight:700;color:var(--orange)">查询中…</span>
+            </div>
+            <div class="home-prog-bar"><div id="hq-home-fill" class="home-prog-fill" style="width:0%;background:var(--orange)"></div></div>
+            <div id="hq-home-sub" style="font-size:10px;color:var(--gray-mid);margin-top:2px">免费账号 25次/月</div>
+          </div>
+          <div class="home-prog-wrap" style="margin-top:10px">
+            <div class="home-prog-label">
+              <span style="font-weight:600">Apollo.io 导出</span>
+              <span style="font-weight:700;color:#7B1FA2">50次/月</span>
+            </div>
+            <div class="home-prog-bar"><div class="home-prog-fill" style="width:0%;background:#CE93D8"></div></div>
+            <div style="font-size:10px;color:var(--gray-mid);margin-top:2px">免费额度（无法自动统计）</div>
+          </div>
+        </div>`;
+      })()}
     </div>`;
+
+  // Async load Hunter quota for the quota card
+  _loadHomeHunterQuota();
 
   // Start live clock
   if (!window._homeClock) {
