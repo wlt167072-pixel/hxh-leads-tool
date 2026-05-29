@@ -900,6 +900,16 @@ SETUP:
   .c-card-flash{animation:cardFlash 2s ease!important;border-color:#1565C0!important}
   .serp-jump-btn{padding:3px 10px;background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9;border-radius:4px;font-size:11px;cursor:pointer;font-weight:700;white-space:nowrap}
   .serp-jump-btn:hover{background:#BBDEFB}
+  .serp-batch-btn{padding:5px 14px;background:#1B5E20;color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;line-height:1.4}
+  .serp-batch-btn:hover:not(:disabled){background:#2E7D32}
+  .serp-batch-btn:disabled{opacity:.6;cursor:not-allowed}
+  #serp-edup-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center}
+  .serp-edup-card{background:white;border-radius:12px;padding:22px;width:360px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+  .serp-edup-title{font-size:15px;font-weight:700;color:#B71C1C;margin-bottom:10px}
+  .serp-edup-body{font-size:13px;color:#37474F;line-height:1.7;margin-bottom:16px}
+  .serp-edup-btns{display:flex;gap:10px;justify-content:flex-end}
+  .serp-edup-cancel{padding:7px 18px;background:#F5F5F5;color:#546E7A;border:1px solid #CFD8DC;border-radius:7px;font-size:13px;cursor:pointer}
+  .serp-edup-confirm{padding:7px 18px;background:#C62828;color:white;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer}
   .serp-result-url{font-size:11px;color:#3949AB;font-family:monospace;word-break:break-all;margin-bottom:4px}
   .serp-result-snippet{font-size:12px;color:var(--gray);line-height:1.55}
   .serp-email-badge{display:inline-block;background:#E3F2FD;color:#0D47A1;border:1px solid #90CAF9;border-radius:10px;font-size:11px;font-family:monospace;padding:2px 8px;margin:2px 3px 2px 0;cursor:pointer;transition:background .1s}
@@ -8891,18 +8901,27 @@ async function serpSearch(force = false) {
     serpUpdateQuotaDisplay();
 
     const organic = data.organic_results || [];
-    _serpResults = organic;
 
-    if (!organic.length) {
+    // Problem 1: Filter social media post links before display
+    const _SOCIAL_RE = /(?:facebook\.com\/(?:posts\/|permalink\/|groups\/[^/]+\/permalink)|instagram\.com\/(?:p|reel)\/|tiktok\.com\/|youtube\.com\/watch\?|reddit\.com\/r\/[^/]+\/comments\/|(?:twitter|x)\.com\/\w+\/status\/)/i;
+    const filtered = organic.filter(r => !_SOCIAL_RE.test(r.link || ''));
+    const socialFiltered = organic.length - filtered.length;
+
+    _serpResults = filtered;
+
+    if (!filtered.length) {
       stat.style.background = '#FFF3E0';
       stat.style.color = 'var(--orange)';
-      stat.textContent = `⚠️ 未找到结果，请尝试更换关键词`;
+      stat.style.display = '';
+      stat.style.alignItems = '';
+      stat.style.justifyContent = '';
+      stat.textContent = `⚠️ 未找到结果${socialFiltered ? `（已过滤 ${socialFiltered} 条社交媒体帖子）` : ''}，请尝试更换关键词`;
       return;
     }
 
-    // Count total detected emails across all results
+    // Count total detected emails across all filtered results
     let totalEmails = 0;
-    organic.forEach(r => {
+    filtered.forEach(r => {
       const emails = _serpExtractEmails((r.title||'') + ' ' + (r.snippet||'') + ' ' + (r.link||''));
       totalEmails += emails.length;
       r._emails = emails;
@@ -8910,15 +8929,27 @@ async function serpSearch(force = false) {
 
     stat.style.background = '#E8F5E9';
     stat.style.color = '#2E7D32';
-    stat.textContent = `✅ 找到 ${organic.length} 条结果` +
-      (totalEmails > 0 ? `，自动识别到 ${totalEmails} 个邮箱地址 📧` : '');
+    let statMsg = `✅ 找到 ${filtered.length} 条结果`;
+    if (socialFiltered > 0) statMsg += `，已过滤 ${socialFiltered} 条社交媒体帖子`;
+    if (totalEmails > 0) statMsg += `，识别到 ${totalEmails} 个邮箱 📧`;
 
-    // Save to search history
-    _serpSaveHistoryRecord(keyword, country, organic.length);
+    // Save to search history (use filtered count)
+    _serpSaveHistoryRecord(keyword, country, filtered.length);
     serpRenderHistory();
 
+    // Problem 4: Batch import button for results with emails
+    const emailResultCount = filtered.filter(r => r._emails && r._emails.length > 0).length;
+    const batchBtnHtml = emailResultCount > 0
+      ? `<button id="serp-batch-btn" class="serp-batch-btn" onclick="serpBatchImport()" title="批量导入全部有邮箱的结果，自动跳过重复">⬇️ 导入全部有邮箱(${emailResultCount}个)</button>`
+      : '';
+    stat.style.display = 'flex';
+    stat.style.alignItems = 'center';
+    stat.style.justifyContent = 'space-between';
+    stat.style.gap = '8px';
+    stat.innerHTML = `<span>${statMsg}</span>${batchBtnHtml}`;
+
     // Render results
-    wrap.innerHTML = organic.map((r, i) => {
+    wrap.innerHTML = filtered.map((r, i) => {
       const emails  = r._emails || [];
       const snippet = _serpHighlightEmails(r.snippet || '', emails);
       const emailBadges = emails.length
@@ -9008,26 +9039,94 @@ function _serpScoreLead(r) {
   return 3;
 }
 
-function serpImportLead(idx, btn) {
+// Problem 2: Improved company name extraction from search result title/URL
+function _serpExtractCompanyName(title, link) {
+  let name = (title || '').trim();
+  // Take first segment before |, –, — or isolated " - " (common "Page Title - Site Name" pattern)
+  name = name.split(/\s*[|–—]\s*|\s+-\s+/)[0].trim();
+  // Strip noise marketing/generic words
+  const noiseWords = ['Our', 'We', 'Buy', 'Sale', 'Used', 'New', 'Best', 'Top', 'Call', 'Whatsapp'];
+  noiseWords.forEach(w => {
+    name = name.replace(new RegExp('\\b' + w + '\\b', 'gi'), '');
+  });
+  name = name.replace(/\s+/g, ' ').trim();
+  // Fallback: derive from domain if result is too short
+  if (name.length < 3 && link) {
+    let domain = (link || '').replace(/^https?:\/\/(?:www\.)?/, '').split('/')[0];
+    // Strip TLDs (up to 2 levels: .co.uk → strip twice)
+    domain = domain.replace(/\.[a-z]{2,}$/i, '').replace(/\.[a-z]{2,}$/i, '');
+    name = domain.replace(/[-_.]/g, ' ').trim();
+  }
+  // Capitalize first letter
+  if (name) name = name.charAt(0).toUpperCase() + name.slice(1);
+  return (name.substring(0, 80) || (title || 'Unknown').substring(0, 80));
+}
+
+// Shared import execution (used by single import and batch import)
+function _serpDoImport(newLead, idx, btn, tierLabel, firstEmail) {
+  const existingLeads = loadGSImportedLeads();
+  saveGSImportedLeads([...existingLeads, newLead]);
+  renderList();
+  buildLetterSelect();
+  if (typeof updateGlobalFilterBtn === 'function') updateGlobalFilterBtn();
+  if (typeof renderImportHistory   === 'function') renderImportHistory();
+  if (typeof renderGSSidebar       === 'function') renderGSSidebar();
+  setTimeout(() => { if (typeof renderRanking === 'function') renderRanking(); }, 0);
+
+  const actRow = document.getElementById('serp-act-' + idx);
+  const safeId = newLead.id.replace(/'/g, "\\'");
+  if (actRow) {
+    actRow.innerHTML =
+      `<span style="font-size:12px;font-weight:700;color:#2E7D32">✅ 已导入 · ${tierLabel}${firstEmail ? ' · 📧' + escHtml(firstEmail) : ''}</span>` +
+      `<button class="serp-jump-btn" onclick="serpJumpToCard('${safeId}')">→ 查看客户卡片</button>`;
+  } else if (btn) {
+    btn.textContent = '✅ 已导入';
+    btn.classList.add('done');
+    btn.disabled = true;
+  }
+}
+
+// Problem 3: Email dedup modal state
+let _serpEmailDupPending = null;
+
+function _serpShowEmailDupModal(email, existingCompany, idx, btn) {
+  _serpEmailDupPending = { idx, btn };
+  const emailEl   = document.getElementById('serp-edup-email');
+  const companyEl = document.getElementById('serp-edup-company');
+  if (emailEl)   emailEl.textContent   = email;
+  if (companyEl) companyEl.textContent = existingCompany;
+  const modal = document.getElementById('serp-edup-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function serpEmailDupCancel() {
+  const modal = document.getElementById('serp-edup-modal');
+  if (modal) modal.style.display = 'none';
+  _serpEmailDupPending = null;
+}
+
+function serpEmailDupConfirm() {
+  const modal = document.getElementById('serp-edup-modal');
+  if (modal) modal.style.display = 'none';
+  if (_serpEmailDupPending) {
+    const { idx, btn } = _serpEmailDupPending;
+    _serpEmailDupPending = null;
+    serpImportLead(idx, btn, true); // force=true skips email dedup re-check
+  }
+}
+
+function serpImportLead(idx, btn, force) {
   const r = _serpResults[idx];
   if (!r) return;
 
-  // Bug 3 fix: smart country resolution (search-time lock → keyword match → Nigeria)
   const co = _serpResolveCountry();
 
-  // Extract a clean company name from title (strip " - site name" suffixes)
-  const company = (r.title || 'Unknown')
-    .replace(/\s*[-|–—|·].*/, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .substring(0, 80) || r.title || 'Unknown';
+  // Problem 2: Use improved company name extractor
+  const company = _serpExtractCompanyName(r.title, r.link);
 
   const firstEmail = (r._emails && r._emails[0]) || '';
 
-  // Store website without protocol (gsLeadToCustomer prepends https:// when needed)
   const websiteClean = (r.link || '').replace(/^https?:\/\//, '');
-
-  // Score the lead to assign correct tier
   const tier = _serpScoreLead(r);
   const tierLabel = tier === 1 ? '🔴T1' : tier === 2 ? '🟡T2' : '🟢T3';
 
@@ -9042,47 +9141,91 @@ function serpImportLead(idx, btn) {
     notes:         (r.snippet || '').substring(0, 200),
     email:         firstEmail,
     importedAt:    new Date().toISOString(),
-    _serpImported: true,   // flag: include even if co==='NG' (Bug 1 fix)
+    _serpImported: true,
   };
 
-  // Bug 1 & 2 fix: save directly to the persistent store, never touch gsResults[]
   const existingLeads = loadGSImportedLeads();
 
-  // Deduplicate by website URL (ignore protocol / trailing slash)
+  // Deduplicate by website URL
   const normalize = s => (s || '').replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
   const dupUrl = websiteClean && existingLeads.find(l => normalize(l.website) === normalize(websiteClean));
   if (dupUrl) {
     showSyncFlash(`⚠️ "${company}" 已在客户库（相同网址）`, 'info');
-    btn.textContent = '⚠️ 重复';
+    if (btn) { btn.textContent = '⚠️ 重复'; }
     return;
   }
 
-  saveGSImportedLeads([...existingLeads, newLead]);
-
-  // Refresh all panels that read from the imported-leads store
-  renderList();
-  buildLetterSelect();
-  if (typeof updateGlobalFilterBtn === 'function') updateGlobalFilterBtn();
-  if (typeof renderImportHistory   === 'function') renderImportHistory();
-  if (typeof renderGSSidebar       === 'function') renderGSSidebar();
-  setTimeout(() => { if (typeof renderRanking === 'function') renderRanking(); }, 0);
-
-  // Replace the action row inline: show tier badge + jump link
-  const actRow = document.getElementById('serp-act-' + idx);
-  const safeId = newLead.id.replace(/'/g, "\\'");
-  if (actRow) {
-    actRow.innerHTML =
-      `<span style="font-size:12px;font-weight:700;color:#2E7D32">✅ 已导入 · ${tierLabel}${firstEmail ? ' · 📧' + escHtml(firstEmail) : ''}</span>` +
-      `<button class="serp-jump-btn" onclick="serpJumpToCard('${safeId}')">→ 查看客户卡片</button>`;
-  } else {
-    // Fallback if row not found (shouldn't happen, but keep button state)
-    btn.textContent = '✅ 已导入';
-    btn.classList.add('done');
-    btn.disabled = true;
+  // Problem 3: Email dedup check (skip if force=true, e.g. user confirmed via modal)
+  if (firstEmail && !force) {
+    const allLeads = [...(CUSTOMERS || []), ...existingLeads];
+    const dupEmail = allLeads.find(l => l.email && l.email.toLowerCase() === firstEmail.toLowerCase());
+    if (dupEmail) {
+      _serpShowEmailDupModal(firstEmail, dupEmail.company || dupEmail.name || '已有客户', idx, btn);
+      return;
+    }
   }
 
+  _serpDoImport(newLead, idx, btn, tierLabel, firstEmail);
   showSyncFlash(`✅ "${company}" 已存入客户库 ${tierLabel}`, 'ok');
   _showNextStepHint('serp-import');
+}
+
+// Problem 4: Batch import all email-bearing not-yet-imported results
+async function serpBatchImport() {
+  const batchBtn = document.getElementById('serp-batch-btn');
+  if (batchBtn) { batchBtn.disabled = true; batchBtn.textContent = '⏳ 导入中…'; }
+
+  const normalize = s => (s || '').replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+  let imported = 0, skipped = 0;
+
+  for (let i = 0; i < _serpResults.length; i++) {
+    const r = _serpResults[i];
+    if (!r._emails || !r._emails.length) continue; // no email → skip
+
+    // Skip already-imported items (action row already replaced with jump button)
+    const actRow = document.getElementById('serp-act-' + i);
+    if (actRow && actRow.querySelector('.serp-jump-btn')) { skipped++; continue; }
+
+    const co          = _serpResolveCountry();
+    const company     = _serpExtractCompanyName(r.title, r.link);
+    const firstEmail  = r._emails[0];
+    const websiteClean = (r.link || '').replace(/^https?:\/\//, '');
+    const tier        = _serpScoreLead(r);
+    const tierLabel   = tier === 1 ? '🔴T1' : tier === 2 ? '🟡T2' : '🟢T3';
+
+    // Re-load each iteration so dedup checks see freshly-imported items
+    const existingLeads = loadGSImportedLeads();
+
+    // URL dedup
+    const dupUrl = websiteClean && existingLeads.find(l => normalize(l.website) === normalize(websiteClean));
+    if (dupUrl) { skipped++; continue; }
+
+    // Email dedup (batch mode: silently skip duplicates, no confirmation)
+    const allLeads = [...(CUSTOMERS || []), ...existingLeads];
+    const dupEmail = firstEmail && allLeads.find(l => l.email && l.email.toLowerCase() === firstEmail.toLowerCase());
+    if (dupEmail) { skipped++; continue; }
+
+    const newLead = {
+      id: `serp_${co.id}_${Date.now()}_${i}`,
+      co: co.id, company, city: co.name, tier, type: 'importer',
+      website: websiteClean, notes: (r.snippet || '').substring(0, 200),
+      email: firstEmail, importedAt: new Date().toISOString(), _serpImported: true,
+    };
+
+    _serpDoImport(newLead, i, null, tierLabel, firstEmail);
+    imported++;
+
+    // Yield to UI after every 3 imports
+    if (imported % 3 === 0) await new Promise(res => setTimeout(res, 0));
+  }
+
+  if (batchBtn) { batchBtn.textContent = `✅ 已完成`; }
+  showSyncFlash(
+    imported > 0
+      ? `✅ 批量导入完成：已导入 ${imported} 个，跳过 ${skipped} 个重复`
+      : `ℹ️ 批量导入：无新增（${skipped} 个均已存在或重复）`,
+    imported > 0 ? 'ok' : 'info'
+  );
 }
 
 // Show a brief "next step" prompt after key actions
@@ -9174,6 +9317,20 @@ function _showNextStepHint(key) {
   <div class="gs-ar-toast-title" id="gs-ar-toast-title">🔄 自动刷新</div>
   <div class="gs-ar-toast-body" id="gs-ar-toast-body" style="white-space:pre-line"></div>
   <button class="gs-ar-toast-close" onclick="document.getElementById('gs-ar-toast').style.display='none'">关闭</button>
+</div>
+
+<!-- SerpAPI Email Dedup Confirmation Modal -->
+<div id="serp-edup-modal" onclick="if(event.target===this)serpEmailDupCancel()">
+  <div class="serp-edup-card">
+    <div class="serp-edup-title">⚠️ 邮箱已存在于客户库</div>
+    <div class="serp-edup-body">
+      邮箱 <strong id="serp-edup-email"></strong> 已存在于客户「<strong id="serp-edup-company"></strong>」中，是否仍要导入？
+    </div>
+    <div class="serp-edup-btns">
+      <button class="serp-edup-cancel" onclick="serpEmailDupCancel()">取消</button>
+      <button class="serp-edup-confirm" onclick="serpEmailDupConfirm()">仍然导入</button>
+    </div>
+  </div>
 </div>
 
 <!-- GS Contact Manual Edit Modal -->
