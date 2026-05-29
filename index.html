@@ -939,6 +939,12 @@ SETUP:
   .sph-eg{display:block;background:#E8EAF6;border-radius:5px;padding:6px 10px;font-size:11px;font-family:monospace;color:#283593;margin-bottom:5px;cursor:pointer;transition:background .15s;border:none;width:100%;text-align:left}
   .sph-eg:hover{background:#C5CAE9}
   .sph-tip{font-size:11px;color:#78909C;display:flex;align-items:flex-start;gap:6px;margin-top:8px;line-height:1.5}
+  /* keyword library pills */
+  .sph-cat{font-size:11px;font-weight:700;color:#5C6BC0;margin:10px 0 5px;letter-spacing:.3px}
+  .sph-pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+  .sph-pill{padding:5px 11px;background:#E8EAF6;border:1.5px solid #C5CAE9;border-radius:20px;font-size:11px;color:#283593;cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:600}
+  .sph-pill:hover{background:#C5CAE9;border-color:#9FA8DA}
+  .sph-pill.sph-pill-sel{background:#3949AB;color:white;border-color:#3949AB}
 
   /* ── ONBOARDING MULTI-STEP ── */
   .ob-steps{display:flex;gap:3px;margin-bottom:16px}
@@ -2088,8 +2094,8 @@ SETUP:
         </div>
 
         <div class="serp-row">
-          <input type="text" id="serp-keyword" placeholder="generator importer Nigeria contact email" value="generator importer Nigeria contact email">
-          <select id="serp-country-sel">
+          <input type="text" id="serp-keyword" placeholder="generator importer contact email" value="">
+          <select id="serp-country-sel" onchange="serpUpdateExamples()">
             <option value="">不限国家</option>
           </select>
           <button class="serp-btn" id="serp-search-btn" onclick="serpSearch()" data-tip="搜索 Google 并自动识别结果中的邮箱地址" title="搜索 Google，返回10条实时结果，自动识别邮箱地址（消耗1次配额）">🔍 搜索</button>
@@ -2103,12 +2109,10 @@ SETUP:
         <div id="serp-results-wrap">
           <!-- Empty placeholder shown before first search -->
           <div class="serp-placeholder" id="serp-placeholder">
-            <div class="sph-title">💡 搜索示例 — 点击可填入</div>
-            <button class="sph-eg" onclick="document.getElementById('serp-keyword').value=this.textContent.trim();document.getElementById('serp-country-sel').value='Nigeria'">generator importer Nigeria contact email</button>
-            <button class="sph-eg" onclick="document.getElementById('serp-keyword').value=this.textContent.trim();document.getElementById('serp-country-sel').value='Ghana'">Cummins generator dealer Ghana distributor</button>
-            <button class="sph-eg" onclick="document.getElementById('serp-keyword').value=this.textContent.trim();document.getElementById('serp-country-sel').value='Kenya'">power generator supplier Kenya wholesale</button>
-            <div class="sph-tip">⬆️ 点击示例自动填入关键词，然后点「🔍 搜索」按钮。每次消耗 1 次配额，共 100 次/月。</div>
-            <div class="sph-tip" style="margin-top:4px">📧 搜索结果会自动识别邮箱地址，蓝色标出，点击即可复制。</div>
+            <div class="sph-title">💡 关键词示例 — 点击填入搜索框 &nbsp;<span style="font-size:10px;font-weight:400;color:#78909C">（切换上方国家可自动更新示例）</span></div>
+            <div id="serp-kw-examples"><!-- populated by serpUpdateExamples() --></div>
+            <div class="sph-tip" style="margin-top:10px">⬆️ 点击关键词自动填入，然后点「🔍 搜索」。每次消耗 1 次配额，共 100 次/月。</div>
+            <div class="sph-tip" style="margin-top:4px">📧 搜索结果自动识别邮箱地址，蓝色标出，点击即可复制。</div>
           </div>
         </div>
       </div>
@@ -8402,7 +8406,60 @@ function _serpPopulateCountries() {
     opt.textContent = (co.flag || '') + ' ' + co.name;
     sel.appendChild(opt);
   });
-  sel.value = 'Nigeria'; // default
+  sel.value = ''; // default: 不限国家
+  serpUpdateExamples();
+}
+
+// ── Keyword library definition ──────────────────────
+const _SERP_KW_LIB = [
+  { cat: '🏭 按类型', items: [
+    { label: '经销商联系邮箱',    kw: 'generator importer {C} contact email' },
+    { label: 'Cummins 授权经销', kw: 'Cummins generator authorized dealer {C}' },
+    { label: 'CAT 发电机经销商', kw: 'CAT Caterpillar generator dealer distributor {C}' },
+    { label: '二手发电机批发商', kw: 'used generator supplier wholesale {C} contact' },
+    { label: '发电机租赁公司',    kw: 'diesel generator rental company {C} contact email' },
+    { label: 'EPC 电力工程公司', kw: 'power generator EPC engineering company {C} email' },
+  ]},
+  { cat: '🔎 按场景', items: [
+    { label: '采矿 / 石油公司',   kw: 'mining oil gas company generator diesel {C} procurement' },
+    { label: '医院酒店备用电源', kw: 'hospital hotel backup power generator supplier {C} contact' },
+    { label: '电信塔发电机',      kw: 'telecom tower generator supplier Africa {C} email' },
+    { label: '大功率工业用电',    kw: 'industrial power generator 500kva {C} supplier email' },
+    { label: '政府 / 工程招标',   kw: 'government tender generator procurement {C} contact' },
+  ]},
+];
+
+/**
+ * Render keyword example pills; syncs with current country selection.
+ * Called on country change and after countries are populated.
+ */
+function serpUpdateExamples() {
+  const container = document.getElementById('serp-kw-examples');
+  if (!container) return;
+  const country = (document.getElementById('serp-country-sel')?.value || '').trim();
+
+  let html = '';
+  _SERP_KW_LIB.forEach(cat => {
+    html += `<div class="sph-cat">${cat.cat}</div><div class="sph-pill-row">`;
+    cat.items.forEach(item => {
+      // Replace {C} with country name, or strip it if no country selected
+      const kw = country
+        ? item.kw.replace(/\{C\}/g, country)
+        : item.kw.replace(/ \{C\}/g, '').replace(/\{C\} /g, '').replace(/\{C\}/g, '');
+      const safe = kw.replace(/"/g, '&quot;');
+      html += `<button class="sph-pill" onclick="serpApplyKw(this)" data-kw="${safe}">${item.label}</button>`;
+    });
+    html += `</div>`;
+  });
+  container.innerHTML = html;
+}
+
+/** Fill keyword input from a pill click and highlight the selected pill */
+function serpApplyKw(btn) {
+  const kw = btn.dataset.kw || '';
+  document.getElementById('serp-keyword').value = kw;
+  document.querySelectorAll('#serp-kw-examples .sph-pill').forEach(p => p.classList.remove('sph-pill-sel'));
+  btn.classList.add('sph-pill-sel');
 }
 
 /** Extract all emails from a string, return unique list */
