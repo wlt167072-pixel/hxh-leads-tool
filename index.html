@@ -896,6 +896,10 @@ SETUP:
   .serp-result-item{border:1.5px solid #C5CAE9;border-radius:8px;padding:11px 14px;margin-bottom:8px;background:white;transition:border-color .15s}
   .serp-result-item:hover{border-color:#3949AB}
   .serp-result-title{font-size:13px;font-weight:700;color:#1A237E;margin-bottom:3px}
+  @keyframes cardFlash{0%,100%{box-shadow:none;border-color:transparent}25%,75%{box-shadow:0 0 0 3px #1565C0;border-color:#1565C0}50%{box-shadow:0 0 0 5px rgba(21,101,192,.35);border-color:#1565C0}}
+  .c-card-flash{animation:cardFlash 2s ease!important;border-color:#1565C0!important}
+  .serp-jump-btn{padding:3px 10px;background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9;border-radius:4px;font-size:11px;cursor:pointer;font-weight:700;white-space:nowrap}
+  .serp-jump-btn:hover{background:#BBDEFB}
   .serp-result-url{font-size:11px;color:#3949AB;font-family:monospace;word-break:break-all;margin-bottom:4px}
   .serp-result-snippet{font-size:12px;color:var(--gray);line-height:1.55}
   .serp-email-badge{display:inline-block;background:#E3F2FD;color:#0D47A1;border:1px solid #90CAF9;border-radius:10px;font-size:11px;font-family:monospace;padding:2px 8px;margin:2px 3px 2px 0;cursor:pointer;transition:background .1s}
@@ -8755,6 +8759,26 @@ function serpApplyKw(btn) {
   btn.classList.add('sph-pill-sel');
 }
 
+/**
+ * Switch to customer list, scroll to the imported card, flash-highlight it.
+ * leadId: the GS lead id string (e.g. "serp_NG_1234_0")
+ */
+function serpJumpToCard(leadId) {
+  // Make sure 'all' filter is active so GS imported cards are visible
+  const allBtn = document.getElementById('filter-btn-all');
+  if (currentFilter !== 'all' && allBtn) setFilter('all', allBtn);
+  switchTab('list');
+  // Give renderList() time to paint before scrolling
+  setTimeout(() => {
+    const card = document.getElementById('cc-gs-' + leadId);
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Flash animation: add class, remove after 2 s
+    card.classList.add('c-card-flash');
+    setTimeout(() => card.classList.remove('c-card-flash'), 2100);
+  }, 320);
+}
+
 /** Extract all emails from a string, return unique list */
 function _serpExtractEmails(text) {
   const re = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -8910,7 +8934,7 @@ async function serpSearch(force = false) {
         </div>
         <div class="serp-result-snippet">${snippet}</div>
         ${emailBadges}
-        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div id="serp-act-${i}" style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <button class="serp-import-btn" id="serp-imp-${i}" onclick="serpImportLead(${i}, this)">
             ⬇️ 导入为客户
           </button>
@@ -9043,15 +9067,21 @@ function serpImportLead(idx, btn) {
   if (typeof renderGSSidebar       === 'function') renderGSSidebar();
   setTimeout(() => { if (typeof renderRanking === 'function') renderRanking(); }, 0);
 
-  btn.textContent = '✅ 已导入';
-  btn.classList.add('done');
-  btn.disabled = true;
+  // Replace the action row inline: show tier badge + jump link
+  const actRow = document.getElementById('serp-act-' + idx);
+  const safeId = newLead.id.replace(/'/g, "\\'");
+  if (actRow) {
+    actRow.innerHTML =
+      `<span style="font-size:12px;font-weight:700;color:#2E7D32">✅ 已导入 · ${tierLabel}${firstEmail ? ' · 📧' + escHtml(firstEmail) : ''}</span>` +
+      `<button class="serp-jump-btn" onclick="serpJumpToCard('${safeId}')">→ 查看客户卡片</button>`;
+  } else {
+    // Fallback if row not found (shouldn't happen, but keep button state)
+    btn.textContent = '✅ 已导入';
+    btn.classList.add('done');
+    btn.disabled = true;
+  }
 
-  // Success message as requested: tier badge + "去全部客户Tab查看"
-  showSyncFlash(
-    `✅ "${company}" 已存入客户库 ${tierLabel}${firstEmail ? ' · 📧' + firstEmail : ''} · 去「全部客户」Tab查看`,
-    'ok'
-  );
+  showSyncFlash(`✅ "${company}" 已存入客户库 ${tierLabel}`, 'ok');
   _showNextStepHint('serp-import');
 }
 
